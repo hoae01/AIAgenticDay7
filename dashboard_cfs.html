@@ -1,0 +1,1501 @@
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')
+
+html_content = '''<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Trích Xuất & Vận Hành FPT CFS | FPT Financial Consolidation</title>
+  <meta name="description" content="Dashboard trích xuất thông tin tài liệu hướng dẫn sử dụng và quy trình vận hành Hệ thống Hợp nhất Báo cáo Tài chính FPT CFS">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <style>
+    /* === CSS Variables & Design Tokens === */
+    :root {
+      --bg-base:          #070a13;
+      --bg-surface:       #0d1322;
+      --bg-glass:         rgba(255, 255, 255, 0.04);
+      --bg-glass-hover:   rgba(255, 255, 255, 0.08);
+      --bg-card-header:   rgba(255, 255, 255, 0.02);
+      
+      --border-glass:     rgba(255, 255, 255, 0.10);
+      --border-glass-bright: rgba(255, 255, 255, 0.20);
+      
+      --text-primary:     #f1f5f9;
+      --text-secondary:   #94a3b8;
+      --text-muted:       #64748b;
+      
+      --accent-blue:      #6366f1;
+      --accent-blue-glow: rgba(99, 102, 241, 0.35);
+      
+      --accent-green:     #10b981;
+      --accent-green-glow:rgba(16, 185, 129, 0.35);
+      
+      --accent-amber:     #f59e0b;
+      --accent-amber-glow:rgba(245, 158, 11, 0.35);
+      
+      --accent-rose:      #f43f5e;
+      --accent-rose-glow: rgba(244, 63, 94, 0.35);
+      
+      --accent-cyan:      #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.35);
+      
+      --accent-purple:    #a855f7;
+      --accent-purple-glow:rgba(168, 85, 247, 0.35);
+
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    /* === Reset & Base Styles === */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-base);
+      background-image: 
+        radial-gradient(ellipse at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 10%, rgba(6, 182, 212, 0.10) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* === Header === */
+    .dashboard-header {
+      background: rgba(13, 19, 34, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border-glass);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-box {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 4px 20px var(--accent-blue-glow);
+    }
+
+    .title-box h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-box p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .tag-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-green);
+      letter-spacing: 0.5px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.4); }
+    }
+
+    .clock-box {
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+    }
+
+    /* === Layout Grid === */
+    .dashboard-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Glass Card Base */
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      border-color: var(--border-glass-bright);
+    }
+
+    /* === KPI Row === */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* Accent Top Gradient Border */
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--card-accent), transparent);
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--card-accent);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-glass);
+    }
+
+    .kpi-body {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+    }
+
+    .kpi-unit {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .kpi-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+    }
+
+    .trend-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .trend-indicator.up { color: var(--accent-green); }
+    .trend-indicator.blue { color: var(--accent-blue); }
+
+    /* Accent Variants */
+    .kpi-card[data-accent="blue"] { --card-accent: var(--accent-blue); }
+    .kpi-card[data-accent="cyan"] { --card-accent: var(--accent-cyan); }
+    .kpi-card[data-accent="purple"] { --card-accent: var(--accent-purple); }
+    .kpi-card[data-accent="green"] { --card-accent: var(--accent-green); }
+    .kpi-card[data-accent="amber"] { --card-accent: var(--accent-amber); }
+    .kpi-card[data-accent="rose"] { --card-accent: var(--accent-rose); }
+
+    /* === Chart Grid === */
+    .chart-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    .chart-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i {
+      color: var(--accent-blue);
+    }
+
+    .chart-container-box {
+      position: relative;
+      width: 100%;
+      height: 320px;
+    }
+
+    /* === Navigation / Filter Tabs === */
+    .nav-tabs-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(13, 19, 34, 0.6);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-glass);
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 4px 16px var(--accent-blue-glow);
+    }
+
+    /* === Detailed Tab Content Panels === */
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Workflow Timeline Component */
+    .workflow-stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 20px;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .step-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-glass-bright);
+    }
+
+    .step-number {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 2px solid var(--step-color, var(--accent-blue));
+      color: var(--step-color, var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: 0 0 15px var(--step-glow, var(--accent-blue-glow));
+    }
+
+    .step-info h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .step-info p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .step-badge {
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .step-subtasks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .subtask-chip {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .subtask-chip i {
+      color: var(--accent-green);
+      font-size: 11px;
+    }
+
+    /* === Data Table Component === */
+    .data-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-glass);
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .custom-table th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .custom-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    .custom-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .status-badge.success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-badge.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .status-badge.purple {
+      background: rgba(168, 85, 247, 0.15);
+      color: var(--accent-purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    /* Terms Grid Cards */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .term-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .term-code {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .term-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .term-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* === Search Bar === */
+    .search-box-wrapper {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 12px 16px 12px 42px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 12px var(--accent-blue-glow);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    /* === Footer === */
+    .dashboard-footer {
+      max-width: 1600px;
+      margin: 32px auto 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 1px solid var(--border-glass);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Responsive Breakdown */
+    @media (max-width: 1024px) {
+      .chart-row {
+        grid-template-columns: 1fr;
+      }
+      .step-card {
+        grid-template-columns: 50px 1fr;
+      }
+      .step-badge {
+        grid-column: 2;
+        width: fit-content;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .dashboard-header {
+        padding: 12px 16px;
+      }
+      .dashboard-container {
+        padding: 12px;
+        gap: 16px;
+      }
+      .kpi-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .kpi-value {
+        font-size: 24px;
+      }
+      .step-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- === HEADER === -->
+  <header class="dashboard-header">
+    <div class="brand-section">
+      <div class="logo-box">CFS</div>
+      <div class="title-box">
+        <h1>FPT CFS - Giải Pháp Hợp Nhất Báo Cáo Tài Chính</h1>
+        <p>
+          <span><i class="fa-solid fa-file-pdf"></i> File Trích Xuất: Hướng dẫn Sử dụng & Vận hành</span>
+          <span class="tag-pill">v1.06 | App 2.0.3</span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="live-badge">
+        <span class="pulse-dot"></span>
+        HỆ THỐNG LIVE
+      </div>
+      <div class="clock-box" id="live-clock">00:00:00</div>
+    </div>
+  </header>
+
+  <!-- === MAIN CONTAINER === -->
+  <main class="dashboard-container">
+
+    <!-- === KPI ROW (6 CARDS WITH NUMERIC COUNTER ANIMATIONS) === -->
+    <section class="kpi-row" aria-label="Key Performance Indicators">
+      
+      <!-- KPI 1 -->
+      <article class="glass-card kpi-card" data-accent="blue">
+        <div class="kpi-header">
+          <span class="kpi-title">Tổng Số Trang Tài Liệu</span>
+          <div class="kpi-icon"><i class="fa-solid fa-book-open"></i></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" data-target="112" data-decimals="0">0</span>
+          <span class="kpi-unit">trang</span>
+        </div>
+        <div class="kpi-footer">
+          <span>Phát hành 14/03/2025</span>
+          <span class="trend-indicator up"><i class="fa-solid fa-check"></i> 100% Full</span>
+        </div>
+      </article>
+
+      <!-- KPI 2 -->
+      <article class="glass-card kpi-card" data-accent="cyan">
+        <div class="kpi-header">
+          <span class="kpi-title">Từ Vựng Chuyên Môn</span>
+          <div class="kpi-icon"><i class="fa-solid fa-align-left"></i></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" data-target="31128" data-decimals="0">0</span>
+          <span class="kpi-unit">từ</span>
+        </div>
+        <div class="kpi-footer">
+          <span>Chuẩn VAS & IFRS</span>
+          <span class="trend-indicator blue"><i class="fa-solid fa-chart-simple"></i> Tiêu chuẩn</span>
+        </div>
+      </article>
+
+      <!-- KPI 3 -->
+      <article class="glass-card kpi-card" data-accent="purple">
+        <div class="kpi-header">
+          <span class="kpi-title">Giao Diện Minh Họa UI</span>
+          <div class="kpi-icon"><i class="fa-solid fa-display"></i></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" data-target="178" data-decimals="0">0</span>
+          <span class="kpi-unit">hình</span>
+        </div>
+        <div class="kpi-footer">
+          <span>142 Hình UI Hệ Thống</span>
+          <span class="trend-indicator up"><i class="fa-solid fa-camera"></i> Trực quan</span>
+        </div>
+      </article>
+
+      <!-- KPI 4 -->
+      <article class="glass-card kpi-card" data-accent="green">
+        <div class="kpi-header">
+          <span class="kpi-title">Quy Trình Vận Hành</span>
+          <div class="kpi-icon"><i class="fa-solid fa-diagram-project"></i></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" data-target="5" data-decimals="0">0</span>
+          <span class="kpi-unit">bước</span>
+        </div>
+        <div class="kpi-footer">
+          <span>Tự động hóa 100%</span>
+          <span class="trend-indicator up"><i class="fa-solid fa-arrows-spin"></i> Khép kín</span>
+        </div>
+      </article>
+
+      <!-- KPI 5 -->
+      <article class="glass-card kpi-card" data-accent="amber">
+        <div class="kpi-header">
+          <span class="kpi-title">Thuật Ngữ Cốt Lõi</span>
+          <div class="kpi-icon"><i class="fa-solid fa-key"></i></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" data-target="13" data-decimals="0">0</span>
+          <span class="kpi-unit">khái niệm</span>
+        </div>
+        <div class="kpi-footer">
+          <span>CoA, Cây & Nút Hợp Nhất</span>
+          <span class="trend-indicator blue"><i class="fa-solid fa-shield-halved"></i> Chuẩn hóa</span>
+        </div>
+      </article>
+
+      <!-- KPI 6 -->
+      <article class="glass-card kpi-card" data-accent="rose">
+        <div class="kpi-header">
+          <span class="kpi-title">Mô-đun Nghiệp Vụ</span>
+          <div class="kpi-icon"><i class="fa-solid fa-cubes"></i></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" data-target="24" data-decimals="0">0</span>
+          <span class="kpi-unit">tính năng</span>
+        </div>
+        <div class="kpi-footer">
+          <span>M&A, NCI, LTTM, PPA, Tax</span>
+          <span class="trend-indicator up"><i class="fa-solid fa-bolt"></i> Cao cấp</span>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- === CHART ROW === -->
+    <section class="chart-row">
+      
+      <!-- Chart 1: Content & Page Breakdown across 5 Steps -->
+      <div class="glass-card chart-card">
+        <div class="card-header-flex">
+          <h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Phân Bổ Trang & Khối Lượng Nghiệp Vụ Theo 5 Bước Vận Hành</h2>
+          <span class="tag-pill">Chi Tiết 112 Trang</span>
+        </div>
+        <div class="chart-container-box">
+          <canvas id="workflowChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Focus Areas Doughnut -->
+      <div class="glass-card chart-card">
+        <div class="card-header-flex">
+          <h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Tỷ Trọng Mô-đun Tính Toán</h2>
+          <span class="tag-pill">Tần Suất Nghiệp Vụ</span>
+        </div>
+        <div class="chart-container-box">
+          <canvas id="modulesChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- === NAVIGATION TABS & FILTER BAR === -->
+    <nav class="nav-tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('tab-workflow')">
+        <i class="fa-solid fa-list-check"></i> Quy Trình 5 Bước Vận Hành
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-ma')">
+        <i class="fa-solid fa-handshake"></i> Thuật Sĩ M&A & Thanh Lý
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-terms')">
+        <i class="fa-solid fa-book-bookmark"></i> 13 Thuật Ngữ Cốt Lõi
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-crosscheck')">
+        <i class="fa-solid fa-square-check"></i> 6 Nhóm Kiểm Tra Check-Chéo
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-specs')">
+        <i class="fa-solid fa-gears"></i> Thông Số Kỹ Thuật & Cấu Hình
+      </button>
+    </nav>
+
+    <!-- === TAB 1: 5 GIAI ĐOẠN QUY TRÌNH VẬN HÀNH === -->
+    <section id="tab-workflow" class="tab-panel active">
+      <div class="glass-card" style="padding: 24px;">
+        <div class="card-header-flex" style="margin-bottom: 20px;">
+          <h2 class="card-title"><i class="fa-solid fa-timeline"></i> Chi Tiết Quy Trình 5 Bước Vận Hành Chuẩn FPT CFS</h2>
+          <span class="tag-pill">Áp Dụng Cho Mọi Kỳ BCTC</span>
+        </div>
+
+        <div class="workflow-stepper">
+          
+          <!-- Step 1 -->
+          <div class="step-card" style="--step-color: var(--accent-blue); --step-glow: var(--accent-blue-glow);">
+            <div class="step-number">01</div>
+            <div class="step-info">
+              <h3>Giai Đoạn 1: BẮT ĐẦU (Initialization)</h3>
+              <p>Khởi tạo kỳ kế toán, đảm bảo ít nhất 01 kỳ được mở. Tự động kết chuyển và mang sang số dư tài sản/nợ/vốn từ kỳ trước. Khai báo tỷ giá chuyển đổi BCTC (BS & PL) và cập nhật danh mục phạm vi hợp nhất tập đoàn.</p>
+              <div class="step-subtasks">
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 1.1 Mở / Đóng kỳ kế toán (Trang 9)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 1.2 Mang sang số dư tự động (Trang 9)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 1.3 Khai báo tỷ giá USD/EUR/VND (Trang 9)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 1.4 Cập nhật phạm vi hợp nhất (Trang 10)</span>
+              </div>
+            </div>
+            <span class="step-badge">Trang 9 - 10</span>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-card" style="--step-color: var(--accent-cyan); --step-glow: var(--accent-cyan-glow);">
+            <div class="step-number">02</div>
+            <div class="step-info">
+              <h3>Giai Đoạn 2: CHUẨN BỊ DỮ LIỆU (Data Preparation)</h3>
+              <p>Đồng bộ dữ liệu sổ cái từ các hệ thống ERP/Phần mềm kế toán đơn vị qua API theo lịch ngầm hoặc đồng bộ thủ công. Hỗ trợ Upload Excel mẫu khi chưa kết nối API. Tự động kết chuyển Lãi/Lỗ trong kỳ và đối chiếu giao dịch/số dư Phải thu/Phải trả nội bộ.</p>
+              <div class="step-subtasks">
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 2.1 Đồng bộ API & Upload Excel (Trang 11-13)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 2.2 Tự động kết chuyển Lãi/Lỗ (Trang 13)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 2.3 Đối chiếu mua/bán & công nợ nội bộ (Trang 13-28)</span>
+              </div>
+            </div>
+            <span class="step-badge">Trang 10 - 28</span>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-card" style="--step-color: var(--accent-purple); --step-glow: var(--accent-purple-glow);">
+            <div class="step-number">03</div>
+            <div class="step-info">
+              <h3>Giai Đoạn 3: CHUẨN HÓA DỮ LIỆU (Standardization)</h3>
+              <p>Quy đổi tiền tệ báo cáo tài chính về đồng tiền báo cáo Tập đoàn. Khai báo và hoãn lại Lợi nhuận nội bộ chưa thực hiện (LNNB) đối với Hàng tồn kho, TSCĐ, Chi phí trả trước. Quản lý Doanh thu chưa thực hiện nội bộ và đồng bộ trạng thái TSCĐ.</p>
+              <div class="step-subtasks">
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 3.1 Quy đổi tiền tệ BCTC (Trang 29)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 3.2 Điều chỉnh biến động TK (Trang 29-34)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 3.4 Hoãn lại LNNB chưa thực hiện (Trang 41-56)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 3.6 Cập nhật trạng thái TSCĐ (Trang 57-65)</span>
+              </div>
+            </div>
+            <span class="step-badge">Trang 29 - 65</span>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="step-card" style="--step-color: var(--accent-amber); --step-glow: var(--accent-amber-glow);">
+            <div class="step-number">04</div>
+            <div class="step-info">
+              <h3>Giai Đoạn 4: ĐIỀU CHỈNH HỢP NHẤT (Elimination & Adjustments)</h3>
+              <p>Thực hiện các bút toán hợp nhất: Khử khoản đầu tư vào công ty con, Phân bổ giá mua (PPA), Trích khấu hao Lợi thế thương mại (Goodwill/LTTM), Phân bổ LNNB đã thực hiện, Ghi nhận các bút toán điều chỉnh bổ sung, Tách Lợi ích cổ đông không kiểm soát (NCI) và tính EPS.</p>
+              <div class="step-subtasks">
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 4.1 Khai báo Đầu tư vốn & M&A Wizard (Trang 66-87)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 4.2 Phân bổ LTTM & Tài sản hợp nhất (Trang 88-89)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 4.3 Khử giao dịch & số dư nội bộ (Trang 90-91)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 4.6 Tính & Kiểm tra Lợi ích NCI (Trang 96-97)</span>
+              </div>
+            </div>
+            <span class="step-badge">Trang 66 - 99</span>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="step-card" style="--step-color: var(--accent-green); --step-glow: var(--accent-green-glow);">
+            <div class="step-number">05</div>
+            <div class="step-info">
+              <h3>Giai Đoạn 5: KIỂM TRA & PHÁT HÀNH BÁO CÁO (Reporting & Closing)</h3>
+              <p>Xuất Bảng cân đối kế toán (BS), Báo cáo KQKD (PL), Báo cáo Lưu chuyển tiền tệ (CF) và Thuyết minh BCTC Hợp nhất. Thực hiện kiểm tra check-chéo 6 nhóm chỉ tiêu cân đối để đảm bảo 100% không sai lệch trước khi Đóng kỳ kế toán.</p>
+              <div class="step-subtasks">
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 5.1 Báo cáo Tài chính BS / PL / CF (Trang 100)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 5.3 Thuyết minh BCTC Hợp nhất (Trang 102)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 5.5 Kiểm tra check chéo 6 nhóm (Trang 103-104)</span>
+                <span class="subtask-chip"><i class="fa-solid fa-circle-check"></i> 5.6 Đóng kỳ kế toán an toàn (Trang 105)</span>
+              </div>
+            </div>
+            <span class="step-badge">Trang 100 - 112</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- === TAB 2: THUẬT SĨ M&A VÀ THANH LÝ === -->
+    <section id="tab-ma" class="tab-panel">
+      <div class="glass-card" style="padding: 24px;">
+        <div class="card-header-flex" style="margin-bottom: 20px;">
+          <h2 class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Quy Trình Thuật Sĩ M&A & Thanh Lý Doanh Nghiệp (Pages 74-85)</h2>
+          <span class="tag-pill">Tính Năng Tự Động Hóa Cao Cấp</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          
+          <!-- M&A Wizard -->
+          <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-md); padding: 20px;">
+            <h3 style="color: var(--accent-blue); font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-building-circle-check"></i> Thuật Sĩ MUA CÔNG TY (M&A Wizard)
+            </h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+              Tự động hóa 4 bước phức tạp khi thực hiện sáp nhập/mua lại doanh nghiệp trở thành công ty con trong Tập đoàn:
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-blue);">Bước 1: Khai Báo Thông Tin Giao Dịch</strong><br>
+                <span>Nhập ngày kiểm soát, tỷ giá, tỷ lệ sở hữu, giá phí mua và xác định giá trị tài sản thuần (PPA).</span>
+              </div>
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-blue);">Bước 2: Tạo Bút Toán Hợp Nhất</strong><br>
+                <span>Khử khoản đầu tư vốn, ghi nhận Lợi thế thương mại (Goodwill/LTTM) hoặc Lãi mua rẻ.</span>
+              </div>
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-blue);">Bước 3: Ghi Nhận LNNB Chưa Thực Hiện</strong><br>
+                <span>Cập nhật số dư LNNB tồn đọng của tập đoàn được mua tại thời điểm sáp nhập.</span>
+              </div>
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-blue);">Bước 4: Tổng Hợp & Post Bút Toán</strong><br>
+                <span>Tổng hợp toàn bộ ảnh hưởng lên BCTC Hợp nhất và ấn [POST / Ghi sổ].</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divestment Wizard -->
+          <div style="background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.2); border-radius: var(--radius-md); padding: 20px;">
+            <h3 style="color: var(--accent-rose); font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-building-circle-xmark"></i> Thuật Sĩ THANH LÝ / ĐÓNG CỬA (Divestment Wizard)
+            </h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+              Xử lý bài toán tháo gỡ hợp nhất 5 bước khi bán công ty con hoặc đóng cửa doanh nghiệp thành viên:
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-rose);">Bước 1: Nhận Biết Giao Dịch</strong><br>
+                <span>Xác định công ty bị thanh lý, ngày thoái vốn và trạng thái mất/giữ quyền kiểm soát.</span>
+              </div>
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-rose);">Bước 2: Xác Định Lãi / Lỗ Bán Công Ty</strong><br>
+                <span>So sánh giá bán với giá trị tài sản thuần mất đi để đưa ra bút toán chênh lệch hợp nhất.</span>
+              </div>
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-rose);">Bước 3: Khai Báo Giao Dịch Thoái Vốn</strong><br>
+                <span>Kiểm tra xem trước các giao dịch rút vốn và hoàn trả giá trị đầu tư.</span>
+              </div>
+              <div class="subtask-chip" style="background: rgba(0,0,0,0.3); padding: 10px;">
+                <strong style="color: var(--accent-rose);">Bước 4 & 5: Xóa Sổ LTTM & Đóng Bộ Sổ</strong><br>
+                <span>Tự động xóa sổ dư LTTM, xóa LNNB tồn đọng và đóng toàn bộ sổ kế toán công ty con.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- === TAB 3: 13 THUẬT NGỮ CỐT LÕI === -->
+    <section id="tab-terms" class="tab-panel">
+      <div class="glass-card" style="padding: 24px;">
+        <div class="card-header-flex" style="margin-bottom: 16px;">
+          <h2 class="card-title"><i class="fa-solid fa-book"></i> 13 Thuật Ngữ & Khái Niệm Nền Tảng Trong FPT CFS</h2>
+          <span class="tag-pill">Trang 4 - 5</span>
+        </div>
+
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="termsSearch" class="search-input" placeholder="Tìm kiếm thuật ngữ (ví dụ: Nút Hợp nhất, CoA, Cây Hợp nhất...)" onkeyup="filterTerms()">
+        </div>
+
+        <div class="terms-grid" id="termsGrid">
+          
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 01</span>
+            <div class="term-title">FPT CFS / CFS</div>
+            <div class="term-desc">Giải pháp Hợp nhất Báo cáo Tài chính FPT CFS, bao gồm các mô-đun và tính năng lập báo cáo tự động cho tập đoàn.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 02</span>
+            <div class="term-title">Tập Đoàn (Group)</div>
+            <div class="term-desc">Bao gồm công ty mẹ tối cao cùng toàn bộ các công ty con trực tiếp và gián tiếp trong phả hệ doanh nghiệp.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 03</span>
+            <div class="term-title">BCTC Hợp Nhất</div>
+            <div class="term-desc">Báo cáo tài chính trình bày tài sản, nợ phải trả, vốn chủ sở hữu, doanh thu, chi phí của toàn tập đoàn như một thực thể duy nhất.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 04</span>
+            <div class="term-title">Hợp Nhất (Consolidation)</div>
+            <div class="term-desc">Việc áp dụng các quy định chuẩn mực kế toán để hợp cộng và triệt khử giao dịch nội bộ giữa công ty mẹ và các công ty con.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 05</span>
+            <div class="term-title">Năm Tài Chính</div>
+            <div class="term-desc">Năm tài chính của tập đoàn tại cấp công ty mẹ tối cao, dùng để lập báo cáo tài chính hợp nhất năm cấp cao nhất.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 06</span>
+            <div class="term-title">Kỳ Báo Cáo</div>
+            <div class="term-desc">Khoảng thời gian xác định trước (Tháng hoặc Quý) dùng để tổng hợp số liệu và tình hình tài chính của Tập đoàn.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 07</span>
+            <div class="term-title">Tài Khoản Sổ Cái (GL)</div>
+            <div class="term-desc">Các tài khoản kế toán được đánh số và đặt tên riêng gồm nhóm Tài sản, Nguồn vốn, Doanh thu và Chi phí.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 08</span>
+            <div class="term-title">CoA Riêng (Local Chart of Accounts)</div>
+            <div class="term-desc">Bảng hệ thống tài khoản riêng của từng thực thể pháp nhân độc lập thuộc Tập đoàn.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 09</span>
+            <div class="term-title">CoA Tập Đoàn (Consolidated CoA)</div>
+            <div class="term-desc">Bảng hệ thống tài khoản hợp nhất được chuẩn hóa, dùng để ánh xạ (mapping) toàn bộ CoA riêng của các công ty con về một chuẩn duy nhất.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 10</span>
+            <div class="term-title">Nút Hợp Nhất (Consolidation Node)</div>
+            <div class="term-desc">Điểm phân nhánh có từ 2 thực thể trở lên cần hợp nhất kinh doanh thành một đơn vị báo cáo. Nút cao nhất là Nút Hợp Nhất Tối Cao.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 11</span>
+            <div class="term-title">Cây Hợp Nhất (Consolidation Tree)</div>
+            <div class="term-desc">Mô hình gia phả hình cây mô tả quan hệ sở hữu giữa công ty mẹ, công ty con và các cấp trực thuộc để triệt khử giao dịch theo từng cấp.</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 12</span>
+            <div class="term-title">Nội Bộ Công Ty</div>
+            <div class="term-desc">Các giao dịch, số dư giữa các thực thể ở cấp thấp nhất có chung Nút Hợp Nhất (hoặc giữa văn phòng chính và các chi nhánh).</div>
+          </div>
+
+          <div class="term-card">
+            <span class="term-code">THUẬT NGỮ 13</span>
+            <div class="term-title">Nội Bộ Tập Đoàn</div>
+            <div class="term-desc">Các giao dịch, số dư giữa các thực thể thuộc Nút Hợp Nhất này với các thực thể thuộc Nút Hợp Nhất khác trong cùng tập đoàn.</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- === TAB 4: 6 NHÓM CHECK-CHÉO === -->
+    <section id="tab-crosscheck" class="tab-panel">
+      <div class="glass-card" style="padding: 24px;">
+        <div class="card-header-flex" style="margin-bottom: 20px;">
+          <h2 class="card-title"><i class="fa-solid fa-square-check"></i> 6 Nhóm Kiểm Tra Check-Chéo Tự Động Trước Khi Phát Hành BCTC (Trang 103-104)</h2>
+          <span class="tag-pill">Yêu Cầu Dấu Tick Xanh 100%</span>
+        </div>
+
+        <div class="data-table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Nhóm Kiểm Tra</th>
+                <th>Công Thức Đối Chiếu & Cân Đổi</th>
+                <th>Mục Đích Kiểm Soát</th>
+                <th>Trạng Thái Cấu Hình</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>01</strong></td>
+                <td><strong>Nhóm [BS, PL, CF]</strong></td>
+                <td>Tài sản = Nguồn vốn cuối kỳ & Lợi nhuận BCTC = Lợi nhuận PnL = Lưu chuyển tiền từ HĐKD</td>
+                <td>Đảm bảo tính cân đối cốt lõi của 3 Báo cáo tài chính chính.</td>
+                <td><span class="status-badge success"><i class="fa-solid fa-check"></i> Tự Động Scan</span></td>
+              </tr>
+              <tr>
+                <td><strong>02</strong></td>
+                <td><strong>Nhóm [CF Check]</strong></td>
+                <td>Doanh thu tiền lãi vs Lãi vay P.thu, Cổ tức P.thu vs Doanh thu Cổ tức, Lãi vay P.trả vs Chi phí Lãi vay</td>
+                <td>Đảm bảo các biến động dòng tiền tài chính khớp với sổ cái.</td>
+                <td><span class="status-badge success"><i class="fa-solid fa-check"></i> Tự Động Scan</span></td>
+              </tr>
+              <tr>
+                <td><strong>03</strong></td>
+                <td><strong>Nhóm [BS vs Notes]</strong></td>
+                <td>Đối chiếu số liệu các chỉ tiêu Bảng CĐKT với Chi tiết Thuyết minh tương ứng</td>
+                <td>Tránh mâu thuẫn giữa số liệu báo cáo và số liệu minh họa.</td>
+                <td><span class="status-badge success"><i class="fa-solid fa-check"></i> Tự Động Scan</span></td>
+              </tr>
+              <tr>
+                <td><strong>04</strong></td>
+                <td><strong>Nhóm [PnL vs Notes]</strong></td>
+                <td>Đối chiếu các khoản mục Doanh thu, Giá vốn, Chi phí quản lý trên PL với Thuyết minh</td>
+                <td>Đảm bảo phân loại chi phí nhất quán toàn hệ thống.</td>
+                <td><span class="status-badge success"><i class="fa-solid fa-check"></i> Tự Động Scan</span></td>
+              </tr>
+              <tr>
+                <td><strong>05</strong></td>
+                <td><strong>Nhóm [TSCĐ vs TB]</strong></td>
+                <td>Nguyên giá & Khấu hao lũy kế TSCĐ trên Bảng Cân đối Thử vs Sổ chi tiết TSCĐ</td>
+                <td>Đảm bảo không lệch giữa phần hành tài sản và tổng hợp.</td>
+                <td><span class="status-badge success"><i class="fa-solid fa-check"></i> Tự Động Scan</span></td>
+              </tr>
+              <tr>
+                <td><strong>06</strong></td>
+                <td><strong>Nhóm [Zero Balance]</strong></td>
+                <td>Đầu tư công ty con = 0, Phải thu/Phải trả nội bộ ngắn/dài hạn = 0 sau khi Triệt khử</td>
+                <td>Xác nhận 100% giao dịch nội bộ đã được xóa bỏ hoàn toàn.</td>
+                <td><span class="status-badge success"><i class="fa-solid fa-check"></i> Tự Động Triệt Khử</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- === TAB 5: THÔNG SỐ KỸ THUẬT === -->
+    <section id="tab-specs" class="tab-panel">
+      <div class="glass-card" style="padding: 24px;">
+        <div class="card-header-flex" style="margin-bottom: 20px;">
+          <h2 class="card-title"><i class="fa-solid fa-sliders"></i> Thông Số Kỹ Thuật & Bảo Mật Hệ Thống CFS</h2>
+          <span class="tag-pill">Cấu Hình Vận Hành</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+          
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px;">
+            <h4 style="color: var(--accent-cyan); font-size: 14px; margin-bottom: 10px;"><i class="fa-solid fa-shield-halved"></i> Xác Thực & Bảo Mật (Trang 6-7)</h4>
+            <ul style="font-size: 13px; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 8px;">
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-cyan);"></i> Xác thực Cơ bản (Username / Password)</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-cyan);"></i> Xác thực SSO qua Azure Active Directory</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-cyan);"></i> Bảo mật 2FA / OTP qua Google Authenticator QR Code</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-cyan);"></i> Phân quyền theo từng Bộ sổ Kế toán riêng biệt</li>
+            </ul>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px;">
+            <h4 style="color: var(--accent-purple); font-size: 14px; margin-bottom: 10px;"><i class="fa-solid fa-network-wired"></i> Đồng Bộ & Tích Hợp (Trang 11-12)</h4>
+            <ul style="font-size: 13px; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 8px;">
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-purple);"></i> Job đồng bộ ngầm tự động theo lịch Cron</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-purple);"></i> Đồng bộ thủ công 1-Click tại màn hình đối chiếu</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-purple);"></i> Upload dữ liệu Excel theo Template chuẩn</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-purple);"></i> Thông báo trạng thái đồng bộ qua Notification Bell</li>
+            </ul>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px;">
+            <h4 style="color: var(--accent-green); font-size: 14px; margin-bottom: 10px;"><i class="fa-solid fa-file-export"></i> Kết Xuất Báo Cáo (Trang 100-102)</h4>
+            <ul style="font-size: 13px; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 8px;">
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-green);"></i> Xuất Excel Vùng hiển thị trực quan</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-green);"></i> Xuất Excel Tách Sheet theo từng Công ty con</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-green);"></i> Xuất Excel Cộng ngang theo Cột kèm ADJ@Node</li>
+              <li><i class="fa-solid fa-angle-right" style="color: var(--accent-green);"></i> Thuyết minh tự động theo chuẩn VAS / IFRS</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- === FOOTER === -->
+  <footer class="dashboard-footer">
+    <div class="footer-left">
+      <span><strong>FPT CFS Dashboard</strong> &copy; 2025 FPT Corporation</span>
+      <span>|</span>
+      <span>Phiên bản Tài liệu: 1.06 (14/03/2025)</span>
+      <span>|</span>
+      <span>Phần mềm CFS v2.0.3</span>
+    </div>
+    <div id="last-updated">Cập nhật: --/--/---- --:--:--</div>
+  </footer>
+
+  <!-- === JAVASCRIPT === -->
+  <script>
+    /* === Counter Animation with IntersectionObserver === */
+    function animateCounter(el, target, duration = 1800, prefix = '', suffix = '', decimals = 0) {
+      const start = performance.now();
+      const startVal = 0;
+
+      function update(timestamp) {
+        const elapsed = timestamp - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = startVal + (target - startVal) * eased;
+        
+        el.textContent = prefix + current.toFixed(decimals).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',') + suffix;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseFloat(el.dataset.target);
+          if (!isNaN(target)) {
+            animateCounter(
+              el,
+              target,
+              1800,
+              el.dataset.prefix || '',
+              el.dataset.suffix || '',
+              parseInt(el.dataset.decimals || 0)
+            );
+          }
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('[data-target]').forEach(el => observer.observe(el));
+
+    /* === Live Clock & Timestamp === */
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+      const dateStr = now.toLocaleDateString('vi-VN');
+      
+      const clockEl = document.getElementById('live-clock');
+      if (clockEl) clockEl.textContent = timeStr;
+      
+      const updatedEl = document.getElementById('last-updated');
+      if (updatedEl) updatedEl.textContent = 'Cập nhật: ' + dateStr + ' ' + timeStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* === Tab Switching Function === */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+      const selectedPanel = document.getElementById(tabId);
+      if (selectedPanel) {
+        selectedPanel.classList.add('active');
+      }
+      
+      event.currentTarget.classList.add('active');
+    }
+
+    /* === Terms Search Filter === */
+    function filterTerms() {
+      const input = document.getElementById('termsSearch').value.toLowerCase();
+      const cards = document.querySelectorAll('#termsGrid .term-card');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(input)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    /* === Chart.js Configuration === */
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.06)';
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
+    // Chart 1: Workflow Steps Bar Chart
+    const ctxWorkflow = document.getElementById('workflowChart').getContext('2d');
+    
+    const gradBlue = ctxWorkflow.createLinearGradient(0, 0, 0, 300);
+    gradBlue.addColorStop(0, 'rgba(99, 102, 241, 0.8)');
+    gradBlue.addColorStop(1, 'rgba(99, 102, 241, 0.1)');
+
+    const gradCyan = ctxWorkflow.createLinearGradient(0, 0, 0, 300);
+    gradCyan.addColorStop(0, 'rgba(6, 182, 212, 0.8)');
+    gradCyan.addColorStop(1, 'rgba(6, 182, 212, 0.1)');
+
+    new Chart(ctxWorkflow, {
+      type: 'bar',
+      data: {
+        labels: [
+          'B1: Bắt đầu (p.9-10)',
+          'B2: Chuẩn bị Dữ liệu (p.10-28)',
+          'B3: Chuẩn hóa Dữ liệu (p.29-65)',
+          'B4: Điều chỉnh Hợp nhất (p.66-99)',
+          'B5: Kiểm tra & Báo cáo (p.100-112)'
+        ],
+        datasets: [
+          {
+            label: 'Số Trang Hướng Dẫn',
+            data: [14, 19, 37, 34, 13],
+            backgroundColor: [
+              'rgba(99, 102, 241, 0.65)',
+              'rgba(6, 182, 212, 0.65)',
+              'rgba(168, 85, 247, 0.65)',
+              'rgba(245, 158, 11, 0.65)',
+              'rgba(16, 185, 129, 0.65)'
+            ],
+            borderColor: [
+              '#6366f1',
+              '#06b6d4',
+              '#a855f7',
+              '#f59e0b',
+              '#10b981'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 8
+          },
+          {
+            label: 'Số Lượng Minh Họa UI',
+            type: 'line',
+            data: [8, 20, 48, 42, 24],
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.2)',
+            borderWidth: 3,
+            pointRadius: 5,
+            pointBackgroundColor: '#f43f5e',
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              font: { size: 12, weight: 600 }
+            }
+          },
+          tooltip: {
+            backgroundColor: '#0d1322',
+            titleColor: '#fff',
+            borderColor: 'rgba(255, 255, 255, 0.15)',
+            borderWidth: 1,
+            padding: 12
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+
+    // Chart 2: Module Weight Doughnut Chart
+    const ctxModules = document.getElementById('modulesChart').getContext('2d');
+    new Chart(ctxModules, {
+      type: 'doughnut',
+      data: {
+        labels: [
+          'Triệt khử Nội bộ (45%)',
+          'Đầu tư Vốn & M&A (25%)',
+          'Chuyển đổi Tỷ giá (15%)',
+          'Thuế Hoãn lại & NCI (15%)'
+        ],
+        datasets: [{
+          data: [45, 25, 15, 15],
+          backgroundColor: [
+            '#6366f1',
+            '#a855f7',
+            '#06b6d4',
+            '#10b981'
+          ],
+          borderColor: '#0d1322',
+          borderWidth: 3,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              padding: 14,
+              font: { size: 11, weight: 600 }
+            }
+          },
+          tooltip: {
+            backgroundColor: '#0d1322',
+            borderColor: 'rgba(255,255,255,0.15)',
+            borderWidth: 1
+          }
+        },
+        cutout: '68%'
+      }
+    });
+  </script>
+</body>
+</html>
+'''
+
+with open('dashboard_cfs.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("Dashboard created successfully at dashboard_cfs.html")

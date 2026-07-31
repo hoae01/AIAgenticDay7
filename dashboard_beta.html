@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beta Solutions | Dashboard Quản Lý Ngân Sách Real-Time</title>
+  <meta name="description" content="Dashboard Quản Lý Ngân Sách & Chi Tiêu cho Công Ty Beta Solutions với kết nối Real-time Excel 2 giây.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* =========================================================
+       1. CORE DESIGN TOKENS & BRAND GUIDELINE COMPLIANCE
+       ========================================================= */
+    :root {
+      /* Brand Color Constraints (Mandatory) */
+      --color-budget:       #7C3AED; /* Tím Hoàng Gia */
+      --color-budget-glow:  rgba(124, 58, 237, 0.4);
+      --color-expense:      #06B6D4; /* Xanh Ngọc */
+      --color-expense-glow: rgba(6, 182, 212, 0.4);
+      --color-overrun:      #F43F5E; /* Hồng San Hô */
+      --color-overrun-glow: rgba(244, 63, 94, 0.4);
+
+      /* Theme Backgrounds */
+      --bg-base:     #0f172a; /* Slate 900 */
+      --bg-surface:  #1e293b; /* Slate 800 */
+      --bg-glass:    rgba(30, 41, 59, 0.75);
+      --bg-card:     rgba(15, 23, 42, 0.65);
+      --border-glass: rgba(255, 255, 255, 0.12);
+      
+      /* Text colors */
+      --text-main:    #f8fafc;
+      --text-sub:     #94a3b8;
+      --text-muted:   #64748b;
+
+      /* UI Accents */
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(ellipse at 15% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 75%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 50%, rgba(244, 63, 94, 0.06) 0%, transparent 60%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* =========================================================
+       2. LAYOUT CONTAINER & GLASS CARDS
+       ========================================================= */
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    /* =========================================================
+       3. HEADER & STATUS BAR
+       ========================================================= */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 28px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--color-budget), var(--color-expense));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 22px;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+    }
+
+    .brand-title h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--text-sub));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-green);
+      letter-spacing: 0.5px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: pulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.4; }
+    }
+
+    .clock-box {
+      text-align: right;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .clock-time {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =========================================================
+       4. INTERACTIVE FILTERS BAR
+       ========================================================= */
+    .filter-panel {
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .filter-group-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      min-width: 110px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-sub);
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--color-budget), #6d28d9);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      box-shadow: 0 4px 14px var(--color-budget-glow);
+    }
+
+    .filter-btn.active.dept-btn {
+      background: linear-gradient(135deg, var(--color-expense), #0891b2);
+      box-shadow: 0 4px 14px var(--color-expense-glow);
+    }
+
+    .reset-filter-btn {
+      margin-left: auto;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: var(--color-overrun);
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .reset-filter-btn:hover {
+      background: rgba(244, 63, 94, 0.25);
+      color: #ffffff;
+    }
+
+    /* =========================================================
+       5. KPI CARDS SECTION (3 MANDATORY KPI CARDS)
+       ========================================================= */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Accent Glow Line on top of KPI Card */
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .kpi-budget::before {
+      background: linear-gradient(90deg, var(--color-budget), #a855f7);
+      box-shadow: 0 0 12px var(--color-budget-glow);
+    }
+
+    .kpi-expense::before {
+      background: linear-gradient(90deg, var(--color-expense), #22d3ee);
+      box-shadow: 0 0 12px var(--color-expense-glow);
+    }
+
+    .kpi-overrun::before {
+      background: linear-gradient(90deg, var(--color-overrun), #fb7185);
+      box-shadow: 0 0 12px var(--color-overrun-glow);
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .kpi-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-sub);
+    }
+
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .kpi-budget .kpi-icon {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--color-budget);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .kpi-expense .kpi-icon {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--color-expense);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .kpi-overrun .kpi-icon {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--color-overrun);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .kpi-value-box {
+      margin-bottom: 14px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .kpi-budget .kpi-value { color: #f3e8ff; }
+    .kpi-expense .kpi-value { color: #e0f2fe; }
+    .kpi-overrun .kpi-value { color: #ffe4e6; }
+
+    .kpi-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-sub);
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .trend-badge.purple { background: rgba(124, 58, 237, 0.2); color: #c084fc; }
+    .trend-badge.cyan { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
+    .trend-badge.pink { background: rgba(244, 63, 94, 0.2); color: #fda4af; }
+
+    /* =========================================================
+       6. CHARTS SECTION (2 MANDATORY CHARTS)
+       ========================================================= */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1100px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .chart-title-box h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .chart-title-box p {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 340px;
+    }
+
+    /* =========================================================
+       7. TRANSACTION DATA TABLE SECTION
+       ========================================================= */
+    .table-card {
+      padding: 24px;
+    }
+
+    .table-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 260px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px 14px 8px 36px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--color-expense);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 420px;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    thead {
+      background: rgba(30, 41, 59, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--text-sub);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr.row-overrun {
+      background-color: rgba(244, 63, 94, 0.05);
+    }
+
+    tbody tr.row-overrun:hover {
+      background-color: rgba(244, 63, 94, 0.1);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-pill.ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pill.warn {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--color-overrun);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- =========================================================
+         HEADER & REAL-TIME STATUS
+         ========================================================= -->
+    <header class="glass-card">
+      <div class="brand-section">
+        <div class="brand-logo">β</div>
+        <div class="brand-title">
+          <h1>BETA SOLUTIONS — QUẢN LÝ NGÂN SÁCH</h1>
+          <p>Hệ thống Giám sát & Phân tích Chi tiêu Tài chính Real-time</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <div class="live-badge">
+          <div class="pulse-dot"></div>
+          <span>LIVE EXCEL SYNC (2s)</span>
+        </div>
+        <div class="clock-box">
+          <div class="clock-time" id="live-clock">--:--:--</div>
+          <div id="last-updated">Đang kết nối server...</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         INTERACTIVE FILTERS (QUARTER & DEPARTMENT)
+         ========================================================= -->
+    <section class="glass-card filter-panel" aria-label="Bộ Lọc Dữ Liệu">
+      <!-- Row 1: Quý -->
+      <div class="filter-group-row">
+        <div class="filter-label">
+          <span>📅 Chọn Quý:</span>
+        </div>
+        <div class="filter-options" id="quarter-filters">
+          <button class="filter-btn active" data-quarter="ALL">Tất cả Quý</button>
+          <button class="filter-btn" data-quarter="Q1">Quý 1 (Q1)</button>
+          <button class="filter-btn" data-quarter="Q2">Quý 2 (Q2)</button>
+          <button class="filter-btn" data-quarter="Q3">Quý 3 (Q3)</button>
+          <button class="filter-btn" data-quarter="Q4">Quý 4 (Q4)</button>
+        </div>
+        <button class="reset-filter-btn" id="btn-reset-filters">🔄 Đặt lại bộ lọc</button>
+      </div>
+
+      <!-- Row 2: Phòng Ban -->
+      <div class="filter-group-row">
+        <div class="filter-label">
+          <span>🏢 Phòng Ban:</span>
+        </div>
+        <div class="filter-options" id="dept-filters">
+          <button class="filter-btn dept-btn active" data-dept="ALL">Tất cả Phòng Ban</button>
+          <button class="filter-btn dept-btn" data-dept="Công nghệ (IT)">Công nghệ (IT)</button>
+          <button class="filter-btn dept-btn" data-dept="Kinh doanh (Sales)">Kinh doanh (Sales)</button>
+          <button class="filter-btn dept-btn" data-dept="Marketing">Marketing</button>
+          <button class="filter-btn dept-btn" data-dept="Nhân sự (HR)">Nhân sự (HR)</button>
+          <button class="filter-btn dept-btn" data-dept="Tài chính">Tài chính</button>
+          <button class="filter-btn dept-btn" data-dept="Vận hành (Ops)">Vận hành (Ops)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         3 MANDATORY KPI CARDS WITH COUNTER ANIMATION
+         ========================================================= -->
+    <section class="kpi-grid">
+
+      <!-- KPI 1: TỔNG NGÂN SÁCH (MÀU TÍM HOÀNG GIA #7C3AED) -->
+      <div class="glass-card kpi-card kpi-budget">
+        <div class="kpi-header">
+          <span class="kpi-title">Tổng Ngân Sách</span>
+          <div class="kpi-icon">💰</div>
+        </div>
+        <div class="kpi-value-box">
+          <div class="kpi-value" id="kpi-budget-val">0 ₫</div>
+        </div>
+        <div class="kpi-footer">
+          <span>Hạn mức phê duyệt</span>
+          <span class="trend-badge purple" id="kpi-budget-sub">100% Cấp phát</span>
+        </div>
+      </div>
+
+      <!-- KPI 2: TỔNG CHI TIÊU (MÀU XANH NGỌC #06B6D4) -->
+      <div class="glass-card kpi-card kpi-expense">
+        <div class="kpi-header">
+          <span class="kpi-title">Tổng Chi Tiêu</span>
+          <div class="kpi-icon">💳</div>
+        </div>
+        <div class="kpi-value-box">
+          <div class="kpi-value" id="kpi-expense-val">0 ₫</div>
+        </div>
+        <div class="kpi-footer">
+          <span>Thực chi đã giải ngân</span>
+          <span class="trend-badge cyan" id="kpi-expense-sub">0% Ngân sách</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: GIAO DỊCH VƯỢT NS (MÀU HỒNG SAN HÔ #F43F5E) -->
+      <div class="glass-card kpi-card kpi-overrun">
+        <div class="kpi-header">
+          <span class="kpi-title">Giao Dịch Vượt NS</span>
+          <div class="kpi-icon">⚠️</div>
+        </div>
+        <div class="kpi-value-box">
+          <div class="kpi-value" id="kpi-overrun-val">0</div>
+        </div>
+        <div class="kpi-footer">
+          <span>Tổng tiền vượt hạn mức</span>
+          <span class="trend-badge pink" id="kpi-overrun-sub">+0 ₫</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =========================================================
+         2 MANDATORY CHARTS (GROUPED BAR & DONUT CHART)
+         ========================================================= -->
+    <section class="charts-grid">
+
+      <!-- Chart 1: Grouped Bar Chart (Ngân sách vs Chi tiêu) -->
+      <div class="glass-card chart-card">
+        <div class="chart-header">
+          <div class="chart-title-box">
+            <h3>So Sánh Ngân Sách vs Thực Chi</h3>
+            <p>Đối sánh hạn mức cấp phát và giải ngân thực tế theo Phòng ban</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Donut Chart (Tỷ trọng Phòng ban) -->
+      <div class="glass-card chart-card">
+        <div class="chart-header">
+          <div class="chart-title-box">
+            <h3>Tỷ Trọng Chi Tiêu Phòng Ban</h3>
+            <p>Phân bổ ngân sách chi tiêu giữa các bộ phận</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="donutChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =========================================================
+         INTERACTIVE DATA TABLE
+         ========================================================= -->
+    <section class="glass-card table-card">
+      <div class="table-header-bar">
+        <div class="chart-title-box">
+          <h3>Danh Sách Giao Dịch Ngân Sách</h3>
+          <p id="table-subtitle">Hiển thị các giao dịch theo bộ lọc hiện tại</p>
+        </div>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="table-search" class="search-input" placeholder="Tìm theo mã GD, hạng mục, người duyệt...">
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Mã GD</th>
+              <th>Ngày</th>
+              <th>Quý</th>
+              <th>Phòng Ban</th>
+              <th>Hạng Mục Chi Tiêu</th>
+              <th style="text-align: right;">Ngân Sách (VND)</th>
+              <th style="text-align: right;">Thực Chi (VND)</th>
+              <th style="text-align: right;">Chênh Lệch</th>
+              <th style="text-align: center;">Trạng Thái</th>
+              <th>Người Duyệt</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Beta Solutions Financial Dashboard © 2026 • Powered by Agentic AI & Real-Time Sync Engine
+    </footer>
+
+  </div>
+
+  <!-- =========================================================
+       8. JAVASCRIPT & REAL-TIME POLLING ENGINE
+       ========================================================= -->
+  <script>
+    // --- Global State ---
+    const EMBEDDED_RECORDS = [{"ma_gd": "GD-2024-0001", "ngay": "2024-01-01", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 29000000.0, "thuc_chi": 31975303.0, "chenh_lech": 2975303.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0002", "ngay": "2024-01-01", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 89000000.0, "thuc_chi": 84780233.0, "chenh_lech": -4219767.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0003", "ngay": "2024-01-02", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 164000000.0, "thuc_chi": 119888324.0, "chenh_lech": -44111676.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0004", "ngay": "2024-01-03", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 35000000.0, "thuc_chi": 36386519.0, "chenh_lech": 1386519.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0005", "ngay": "2024-01-03", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 103000000.0, "thuc_chi": 88598130.0, "chenh_lech": -14401870.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0006", "ngay": "2024-01-04", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 29000000.0, "thuc_chi": 27574316.0, "chenh_lech": -1425684.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0007", "ngay": "2024-01-05", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 78000000.0, "thuc_chi": 74624128.0, "chenh_lech": -3375872.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0008", "ngay": "2024-01-06", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 87000000.0, "thuc_chi": 64012718.0, "chenh_lech": -22987282.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0009", "ngay": "2024-01-06", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 23000000.0, "thuc_chi": 16301973.0, "chenh_lech": -6698027.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0010", "ngay": "2024-01-07", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 186000000.0, "thuc_chi": 180856597.0, "chenh_lech": -5143403.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0011", "ngay": "2024-01-08", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 64000000.0, "thuc_chi": 68120784.0, "chenh_lech": 4120784.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0012", "ngay": "2024-01-09", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 18000000.0, "thuc_chi": 14430059.0, "chenh_lech": -3569941.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0013", "ngay": "2024-01-09", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 28000000.0, "thuc_chi": 30799988.0, "chenh_lech": 2799988.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0014", "ngay": "2024-01-10", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 96000000.0, "thuc_chi": 95695744.0, "chenh_lech": -304256.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0015", "ngay": "2024-01-11", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 138000000.0, "thuc_chi": 117548337.0, "chenh_lech": -20451663.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0016", "ngay": "2024-01-11", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 103000000.0, "thuc_chi": 128007144.0, "chenh_lech": 25007144.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0017", "ngay": "2024-01-12", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 95000000.0, "thuc_chi": 103667617.0, "chenh_lech": 8667617.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0018", "ngay": "2024-01-13", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Nhân sự (HR)", "hang_muc": "Truyền thông nội bộ", "ngan_sach": 55000000.0, "thuc_chi": 66177530.0, "chenh_lech": 11177530.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0019", "ngay": "2024-01-14", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 47000000.0, "thuc_chi": 34542983.0, "chenh_lech": -12457017.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0020", "ngay": "2024-01-14", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Nhân sự (HR)", "hang_muc": "Teambuilding & Yêu thương", "ngan_sach": 49000000.0, "thuc_chi": 47026192.0, "chenh_lech": -1973808.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0021", "ngay": "2024-01-15", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 15000000.0, "thuc_chi": 16454268.0, "chenh_lech": 1454268.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0022", "ngay": "2024-01-16", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 56000000.0, "thuc_chi": 52731564.0, "chenh_lech": -3268436.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0023", "ngay": "2024-01-17", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 66000000.0, "thuc_chi": 66646903.0, "chenh_lech": 646903.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0024", "ngay": "2024-01-17", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 157000000.0, "thuc_chi": 175141840.0, "chenh_lech": 18141840.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0025", "ngay": "2024-01-18", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 100000000.0, "thuc_chi": 118425731.0, "chenh_lech": 18425731.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0026", "ngay": "2024-01-19", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 148000000.0, "thuc_chi": 140761914.0, "chenh_lech": -7238086.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0027", "ngay": "2024-01-20", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 142000000.0, "thuc_chi": 162461076.0, "chenh_lech": 20461076.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0028", "ngay": "2024-01-20", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 143000000.0, "thuc_chi": 118027100.0, "chenh_lech": -24972900.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0029", "ngay": "2024-01-21", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 17000000.0, "thuc_chi": 11965002.0, "chenh_lech": -5034998.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0030", "ngay": "2024-01-22", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 65000000.0, "thuc_chi": 55131490.0, "chenh_lech": -9868510.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0031", "ngay": "2024-01-22", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 194000000.0, "thuc_chi": 174599278.0, "chenh_lech": -19400722.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0032", "ngay": "2024-01-23", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 53000000.0, "thuc_chi": 51594793.0, "chenh_lech": -1405207.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0033", "ngay": "2024-01-24", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 127000000.0, "thuc_chi": 157116554.0, "chenh_lech": 30116554.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0034", "ngay": "2024-01-25", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 143000000.0, "thuc_chi": 118941542.0, "chenh_lech": -24058458.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0035", "ngay": "2024-01-25", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 174000000.0, "thuc_chi": 174711868.0, "chenh_lech": 711868.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0036", "ngay": "2024-01-26", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 159000000.0, "thuc_chi": 174982519.0, "chenh_lech": 15982519.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0037", "ngay": "2024-01-27", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 158000000.0, "thuc_chi": 183187786.0, "chenh_lech": 25187786.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0038", "ngay": "2024-01-28", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 17000000.0, "thuc_chi": 17424849.0, "chenh_lech": 424849.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0039", "ngay": "2024-01-28", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 161000000.0, "thuc_chi": 143574373.0, "chenh_lech": -17425627.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0040", "ngay": "2024-01-29", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 118000000.0, "thuc_chi": 91525109.0, "chenh_lech": -26474891.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0041", "ngay": "2024-01-30", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 165000000.0, "thuc_chi": 164636403.0, "chenh_lech": -363597.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0042", "ngay": "2024-01-30", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 158000000.0, "thuc_chi": 181616609.0, "chenh_lech": 23616609.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0043", "ngay": "2024-01-31", "quy": "Q1", "thang": "Tháng 1", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 16000000.0, "thuc_chi": 19967032.0, "chenh_lech": 3967032.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0044", "ngay": "2024-02-01", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 23000000.0, "thuc_chi": 19627722.0, "chenh_lech": -3372278.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0045", "ngay": "2024-02-02", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Nhân sự (HR)", "hang_muc": "Teambuilding & Yêu thương", "ngan_sach": 162000000.0, "thuc_chi": 192439400.0, "chenh_lech": 30439400.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0046", "ngay": "2024-02-02", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 127000000.0, "thuc_chi": 100189765.0, "chenh_lech": -26810235.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0047", "ngay": "2024-02-03", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 113000000.0, "thuc_chi": 139613207.0, "chenh_lech": 26613207.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0048", "ngay": "2024-02-04", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 68000000.0, "thuc_chi": 64371062.0, "chenh_lech": -3628938.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0049", "ngay": "2024-02-05", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 82000000.0, "thuc_chi": 68099933.0, "chenh_lech": -13900067.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0050", "ngay": "2024-02-05", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 159000000.0, "thuc_chi": 138239916.0, "chenh_lech": -20760084.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0051", "ngay": "2024-02-06", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 65000000.0, "thuc_chi": 77390664.0, "chenh_lech": 12390664.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0052", "ngay": "2024-02-07", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 44000000.0, "thuc_chi": 46411501.0, "chenh_lech": 2411501.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0053", "ngay": "2024-02-08", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 62000000.0, "thuc_chi": 52974337.0, "chenh_lech": -9025663.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0054", "ngay": "2024-02-08", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 186000000.0, "thuc_chi": 226408913.0, "chenh_lech": 40408913.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0055", "ngay": "2024-02-09", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 138000000.0, "thuc_chi": 97773157.0, "chenh_lech": -40226843.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0056", "ngay": "2024-02-10", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 109000000.0, "thuc_chi": 134069017.0, "chenh_lech": 25069017.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0057", "ngay": "2024-02-10", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 174000000.0, "thuc_chi": 203253779.0, "chenh_lech": 29253779.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0058", "ngay": "2024-02-11", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 68000000.0, "thuc_chi": 73631514.0, "chenh_lech": 5631514.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0059", "ngay": "2024-02-12", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 141000000.0, "thuc_chi": 138896464.0, "chenh_lech": -2103536.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0060", "ngay": "2024-02-13", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 151000000.0, "thuc_chi": 164041303.0, "chenh_lech": 13041303.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0061", "ngay": "2024-02-13", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 113000000.0, "thuc_chi": 95023261.0, "chenh_lech": -17976739.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0062", "ngay": "2024-02-14", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 50000000.0, "thuc_chi": 56953117.0, "chenh_lech": 6953117.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0063", "ngay": "2024-02-15", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 129000000.0, "thuc_chi": 114280756.0, "chenh_lech": -14719244.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0064", "ngay": "2024-02-16", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 167000000.0, "thuc_chi": 131140572.0, "chenh_lech": -35859428.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0065", "ngay": "2024-02-16", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Tài chính", "hang_muc": "Phần mềm Kế toán ERP", "ngan_sach": 100000000.0, "thuc_chi": 83763824.0, "chenh_lech": -16236176.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0066", "ngay": "2024-02-17", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 115000000.0, "thuc_chi": 113531886.0, "chenh_lech": -1468114.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0067", "ngay": "2024-02-18", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 19000000.0, "thuc_chi": 18078420.0, "chenh_lech": -921580.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0068", "ngay": "2024-02-19", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 69000000.0, "thuc_chi": 53550499.0, "chenh_lech": -15449501.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0069", "ngay": "2024-02-19", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 172000000.0, "thuc_chi": 124284987.0, "chenh_lech": -47715013.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0070", "ngay": "2024-02-20", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 131000000.0, "thuc_chi": 97526897.0, "chenh_lech": -33473103.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0071", "ngay": "2024-02-21", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 72000000.0, "thuc_chi": 86642463.0, "chenh_lech": 14642463.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0072", "ngay": "2024-02-21", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 131000000.0, "thuc_chi": 137687396.0, "chenh_lech": 6687396.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0073", "ngay": "2024-02-22", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Nhân sự (HR)", "hang_muc": "Truyền thông nội bộ", "ngan_sach": 36000000.0, "thuc_chi": 39654778.0, "chenh_lech": 3654778.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0074", "ngay": "2024-02-23", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 100000000.0, "thuc_chi": 70791641.0, "chenh_lech": -29208359.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0075", "ngay": "2024-02-24", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 108000000.0, "thuc_chi": 126414358.0, "chenh_lech": 18414358.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0076", "ngay": "2024-02-24", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 190000000.0, "thuc_chi": 217322406.0, "chenh_lech": 27322406.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0077", "ngay": "2024-02-25", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 37000000.0, "thuc_chi": 26877999.0, "chenh_lech": -10122001.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0078", "ngay": "2024-02-26", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Tài chính", "hang_muc": "In ấn & Chứng từ", "ngan_sach": 152000000.0, "thuc_chi": 158721888.0, "chenh_lech": 6721888.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0079", "ngay": "2024-02-27", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 18000000.0, "thuc_chi": 18696926.0, "chenh_lech": 696926.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0080", "ngay": "2024-02-27", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 98000000.0, "thuc_chi": 99618058.0, "chenh_lech": 1618058.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0081", "ngay": "2024-02-28", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 175000000.0, "thuc_chi": 200578402.0, "chenh_lech": 25578402.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0082", "ngay": "2024-02-29", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 79000000.0, "thuc_chi": 97063729.0, "chenh_lech": 18063729.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0083", "ngay": "2024-02-29", "quy": "Q1", "thang": "Tháng 2", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 155000000.0, "thuc_chi": 126793722.0, "chenh_lech": -28206278.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0084", "ngay": "2024-03-01", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 49000000.0, "thuc_chi": 43370136.0, "chenh_lech": -5629864.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0085", "ngay": "2024-03-02", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 104000000.0, "thuc_chi": 92283725.0, "chenh_lech": -11716275.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0086", "ngay": "2024-03-03", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 72000000.0, "thuc_chi": 77990791.0, "chenh_lech": 5990791.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0087", "ngay": "2024-03-03", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 35000000.0, "thuc_chi": 43125925.0, "chenh_lech": 8125925.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0088", "ngay": "2024-03-04", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 166000000.0, "thuc_chi": 189864011.0, "chenh_lech": 23864011.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0089", "ngay": "2024-03-05", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 110000000.0, "thuc_chi": 97618614.0, "chenh_lech": -12381386.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0090", "ngay": "2024-03-06", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 37000000.0, "thuc_chi": 41254947.0, "chenh_lech": 4254947.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0091", "ngay": "2024-03-06", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 76000000.0, "thuc_chi": 73956257.0, "chenh_lech": -2043743.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0092", "ngay": "2024-03-07", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 33000000.0, "thuc_chi": 30164010.0, "chenh_lech": -2835990.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0093", "ngay": "2024-03-08", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 90000000.0, "thuc_chi": 80567806.0, "chenh_lech": -9432194.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0094", "ngay": "2024-03-09", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 97000000.0, "thuc_chi": 94202918.0, "chenh_lech": -2797082.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0095", "ngay": "2024-03-09", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 39000000.0, "thuc_chi": 39176930.0, "chenh_lech": 176930.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0096", "ngay": "2024-03-10", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 53000000.0, "thuc_chi": 39758657.0, "chenh_lech": -13241343.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0097", "ngay": "2024-03-11", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 147000000.0, "thuc_chi": 162489324.0, "chenh_lech": 15489324.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0098", "ngay": "2024-03-11", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 90000000.0, "thuc_chi": 97057485.0, "chenh_lech": 7057485.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0099", "ngay": "2024-03-12", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 21000000.0, "thuc_chi": 19621356.0, "chenh_lech": -1378644.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0100", "ngay": "2024-03-13", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 136000000.0, "thuc_chi": 106166040.0, "chenh_lech": -29833960.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0101", "ngay": "2024-03-14", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 150000000.0, "thuc_chi": 135877340.0, "chenh_lech": -14122660.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0102", "ngay": "2024-03-14", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 85000000.0, "thuc_chi": 105595549.0, "chenh_lech": 20595549.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0103", "ngay": "2024-03-15", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 173000000.0, "thuc_chi": 166930613.0, "chenh_lech": -6069387.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0104", "ngay": "2024-03-16", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 104000000.0, "thuc_chi": 91690444.0, "chenh_lech": -12309556.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0105", "ngay": "2024-03-17", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 140000000.0, "thuc_chi": 102335352.0, "chenh_lech": -37664648.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0106", "ngay": "2024-03-17", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 181000000.0, "thuc_chi": 200968767.0, "chenh_lech": 19968767.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0107", "ngay": "2024-03-18", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 127000000.0, "thuc_chi": 94689958.0, "chenh_lech": -32310042.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0108", "ngay": "2024-03-19", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 58000000.0, "thuc_chi": 71795031.0, "chenh_lech": 13795031.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0109", "ngay": "2024-03-19", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 94000000.0, "thuc_chi": 93082147.0, "chenh_lech": -917853.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0110", "ngay": "2024-03-20", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 161000000.0, "thuc_chi": 198531739.0, "chenh_lech": 37531739.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0111", "ngay": "2024-03-21", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 28000000.0, "thuc_chi": 24135206.0, "chenh_lech": -3864794.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0112", "ngay": "2024-03-22", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 158000000.0, "thuc_chi": 174654051.0, "chenh_lech": 16654051.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0113", "ngay": "2024-03-22", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 166000000.0, "thuc_chi": 172818106.0, "chenh_lech": 6818106.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0114", "ngay": "2024-03-23", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 150000000.0, "thuc_chi": 134151558.0, "chenh_lech": -15848442.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0115", "ngay": "2024-03-24", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 55000000.0, "thuc_chi": 46363483.0, "chenh_lech": -8636517.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0116", "ngay": "2024-03-25", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 175000000.0, "thuc_chi": 162078646.0, "chenh_lech": -12921354.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0117", "ngay": "2024-03-25", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 155000000.0, "thuc_chi": 186156542.0, "chenh_lech": 31156542.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0118", "ngay": "2024-03-26", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 61000000.0, "thuc_chi": 73538373.0, "chenh_lech": 12538373.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0119", "ngay": "2024-03-27", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 123000000.0, "thuc_chi": 97251037.0, "chenh_lech": -25748963.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0120", "ngay": "2024-03-28", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 191000000.0, "thuc_chi": 173276428.0, "chenh_lech": -17723572.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0121", "ngay": "2024-03-28", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 41000000.0, "thuc_chi": 41532787.0, "chenh_lech": 532787.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0122", "ngay": "2024-03-29", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 143000000.0, "thuc_chi": 101175300.0, "chenh_lech": -41824700.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0123", "ngay": "2024-03-30", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 116000000.0, "thuc_chi": 139459974.0, "chenh_lech": 23459974.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0124", "ngay": "2024-03-30", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 97000000.0, "thuc_chi": 81096021.0, "chenh_lech": -15903979.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0125", "ngay": "2024-03-31", "quy": "Q1", "thang": "Tháng 3", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 187000000.0, "thuc_chi": 193245061.0, "chenh_lech": 6245061.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0126", "ngay": "2024-04-01", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 106000000.0, "thuc_chi": 89863605.0, "chenh_lech": -16136395.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0127", "ngay": "2024-04-02", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 137000000.0, "thuc_chi": 119091015.0, "chenh_lech": -17908985.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0128", "ngay": "2024-04-02", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 71000000.0, "thuc_chi": 72737777.0, "chenh_lech": 1737777.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0129", "ngay": "2024-04-03", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 89000000.0, "thuc_chi": 72724595.0, "chenh_lech": -16275405.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0130", "ngay": "2024-04-04", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 112000000.0, "thuc_chi": 117617290.0, "chenh_lech": 5617290.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0131", "ngay": "2024-04-05", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 66000000.0, "thuc_chi": 66072300.0, "chenh_lech": 72300.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0132", "ngay": "2024-04-05", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 44000000.0, "thuc_chi": 45854498.0, "chenh_lech": 1854498.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0133", "ngay": "2024-04-06", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 146000000.0, "thuc_chi": 139085548.0, "chenh_lech": -6914452.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0134", "ngay": "2024-04-07", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 98000000.0, "thuc_chi": 93347417.0, "chenh_lech": -4652583.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0135", "ngay": "2024-04-08", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 140000000.0, "thuc_chi": 146771865.0, "chenh_lech": 6771865.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0136", "ngay": "2024-04-08", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 165000000.0, "thuc_chi": 127120159.0, "chenh_lech": -37879841.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0137", "ngay": "2024-04-09", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 118000000.0, "thuc_chi": 127802945.0, "chenh_lech": 9802945.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0138", "ngay": "2024-04-10", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 169000000.0, "thuc_chi": 180349491.0, "chenh_lech": 11349491.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0139", "ngay": "2024-04-10", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 161000000.0, "thuc_chi": 185469560.0, "chenh_lech": 24469560.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0140", "ngay": "2024-04-11", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 36000000.0, "thuc_chi": 26956310.0, "chenh_lech": -9043690.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0141", "ngay": "2024-04-12", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 104000000.0, "thuc_chi": 123949227.0, "chenh_lech": 19949227.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0142", "ngay": "2024-04-13", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 169000000.0, "thuc_chi": 121954063.0, "chenh_lech": -47045937.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0143", "ngay": "2024-04-13", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 77000000.0, "thuc_chi": 69878060.0, "chenh_lech": -7121940.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0144", "ngay": "2024-04-14", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 22000000.0, "thuc_chi": 24453942.0, "chenh_lech": 2453942.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0145", "ngay": "2024-04-15", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 42000000.0, "thuc_chi": 37921905.0, "chenh_lech": -4078095.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0146", "ngay": "2024-04-16", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Nhân sự (HR)", "hang_muc": "Teambuilding & Yêu thương", "ngan_sach": 70000000.0, "thuc_chi": 54125001.0, "chenh_lech": -15874999.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0147", "ngay": "2024-04-16", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 32000000.0, "thuc_chi": 30274457.0, "chenh_lech": -1725543.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0148", "ngay": "2024-04-17", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 133000000.0, "thuc_chi": 120698336.0, "chenh_lech": -12301664.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0149", "ngay": "2024-04-18", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 100000000.0, "thuc_chi": 88012354.0, "chenh_lech": -11987646.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0150", "ngay": "2024-04-18", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 39000000.0, "thuc_chi": 41866744.0, "chenh_lech": 2866744.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0151", "ngay": "2024-04-19", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 125000000.0, "thuc_chi": 127663714.0, "chenh_lech": 2663714.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0152", "ngay": "2024-04-20", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 97000000.0, "thuc_chi": 88107519.0, "chenh_lech": -8892481.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0153", "ngay": "2024-04-21", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 78000000.0, "thuc_chi": 79086389.0, "chenh_lech": 1086389.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0154", "ngay": "2024-04-21", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 135000000.0, "thuc_chi": 112114089.0, "chenh_lech": -22885911.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0155", "ngay": "2024-04-22", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 108000000.0, "thuc_chi": 86682081.0, "chenh_lech": -21317919.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0156", "ngay": "2024-04-23", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 45000000.0, "thuc_chi": 41657321.0, "chenh_lech": -3342679.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0157", "ngay": "2024-04-24", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 89000000.0, "thuc_chi": 104666573.0, "chenh_lech": 15666573.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0158", "ngay": "2024-04-24", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 76000000.0, "thuc_chi": 92047916.0, "chenh_lech": 16047916.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0159", "ngay": "2024-04-25", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 187000000.0, "thuc_chi": 210042348.0, "chenh_lech": 23042348.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0160", "ngay": "2024-04-26", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 34000000.0, "thuc_chi": 28333061.0, "chenh_lech": -5666939.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0161", "ngay": "2024-04-27", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 140000000.0, "thuc_chi": 109885929.0, "chenh_lech": -30114071.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0162", "ngay": "2024-04-27", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 175000000.0, "thuc_chi": 158038433.0, "chenh_lech": -16961567.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0163", "ngay": "2024-04-28", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 186000000.0, "thuc_chi": 150837026.0, "chenh_lech": -35162974.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0164", "ngay": "2024-04-29", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 87000000.0, "thuc_chi": 97276903.0, "chenh_lech": 10276903.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0165", "ngay": "2024-04-29", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 108000000.0, "thuc_chi": 81937935.0, "chenh_lech": -26062065.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0166", "ngay": "2024-04-30", "quy": "Q2", "thang": "Tháng 4", "phong_ban": "Tài chính", "hang_muc": "In ấn & Chứng từ", "ngan_sach": 192000000.0, "thuc_chi": 147525786.0, "chenh_lech": -44474214.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0167", "ngay": "2024-05-01", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 49000000.0, "thuc_chi": 59267811.0, "chenh_lech": 10267811.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0168", "ngay": "2024-05-02", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 119000000.0, "thuc_chi": 132420350.0, "chenh_lech": 13420350.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0169", "ngay": "2024-05-02", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 179000000.0, "thuc_chi": 205494881.0, "chenh_lech": 26494881.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0170", "ngay": "2024-05-03", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 103000000.0, "thuc_chi": 121793410.0, "chenh_lech": 18793410.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0171", "ngay": "2024-05-04", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 139000000.0, "thuc_chi": 120340338.0, "chenh_lech": -18659662.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0172", "ngay": "2024-05-05", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 67000000.0, "thuc_chi": 80303497.0, "chenh_lech": 13303497.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0173", "ngay": "2024-05-05", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 149000000.0, "thuc_chi": 164168501.0, "chenh_lech": 15168501.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0174", "ngay": "2024-05-06", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 47000000.0, "thuc_chi": 46689969.0, "chenh_lech": -310031.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0175", "ngay": "2024-05-07", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 111000000.0, "thuc_chi": 120861157.0, "chenh_lech": 9861157.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0176", "ngay": "2024-05-08", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 100000000.0, "thuc_chi": 109273524.0, "chenh_lech": 9273524.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0177", "ngay": "2024-05-08", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 132000000.0, "thuc_chi": 152023280.0, "chenh_lech": 20023280.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0178", "ngay": "2024-05-09", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 198000000.0, "thuc_chi": 193299201.0, "chenh_lech": -4700799.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0179", "ngay": "2024-05-10", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 90000000.0, "thuc_chi": 101208158.0, "chenh_lech": 11208158.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0180", "ngay": "2024-05-10", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 178000000.0, "thuc_chi": 177732723.0, "chenh_lech": -267277.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0181", "ngay": "2024-05-11", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 25000000.0, "thuc_chi": 30687278.0, "chenh_lech": 5687278.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0182", "ngay": "2024-05-12", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 155000000.0, "thuc_chi": 120359655.0, "chenh_lech": -34640345.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0183", "ngay": "2024-05-13", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 185000000.0, "thuc_chi": 224343035.0, "chenh_lech": 39343035.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0184", "ngay": "2024-05-13", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 134000000.0, "thuc_chi": 95496765.0, "chenh_lech": -38503235.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0185", "ngay": "2024-05-14", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 151000000.0, "thuc_chi": 140924052.0, "chenh_lech": -10075948.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0186", "ngay": "2024-05-15", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 25000000.0, "thuc_chi": 23699041.0, "chenh_lech": -1300959.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0187", "ngay": "2024-05-16", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 196000000.0, "thuc_chi": 227481507.0, "chenh_lech": 31481507.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0188", "ngay": "2024-05-16", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 182000000.0, "thuc_chi": 188250228.0, "chenh_lech": 6250228.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0189", "ngay": "2024-05-17", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 194000000.0, "thuc_chi": 219857181.0, "chenh_lech": 25857181.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0190", "ngay": "2024-05-18", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 39000000.0, "thuc_chi": 45822464.0, "chenh_lech": 6822464.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0191", "ngay": "2024-05-18", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 176000000.0, "thuc_chi": 212106417.0, "chenh_lech": 36106417.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0192", "ngay": "2024-05-19", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 193000000.0, "thuc_chi": 161449236.0, "chenh_lech": -31550764.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0193", "ngay": "2024-05-20", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 102000000.0, "thuc_chi": 88873644.0, "chenh_lech": -13126356.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0194", "ngay": "2024-05-21", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 170000000.0, "thuc_chi": 138885653.0, "chenh_lech": -31114347.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0195", "ngay": "2024-05-21", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 119000000.0, "thuc_chi": 93029975.0, "chenh_lech": -25970025.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0196", "ngay": "2024-05-22", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 85000000.0, "thuc_chi": 87334249.0, "chenh_lech": 2334249.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0197", "ngay": "2024-05-23", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 137000000.0, "thuc_chi": 156163575.0, "chenh_lech": 19163575.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0198", "ngay": "2024-05-24", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 44000000.0, "thuc_chi": 51044868.0, "chenh_lech": 7044868.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0199", "ngay": "2024-05-24", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 189000000.0, "thuc_chi": 187148981.0, "chenh_lech": -1851019.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0200", "ngay": "2024-05-25", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 77000000.0, "thuc_chi": 58261265.0, "chenh_lech": -18738735.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0201", "ngay": "2024-05-26", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 46000000.0, "thuc_chi": 39089236.0, "chenh_lech": -6910764.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0202", "ngay": "2024-05-27", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 101000000.0, "thuc_chi": 125079641.0, "chenh_lech": 24079641.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0203", "ngay": "2024-05-27", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 71000000.0, "thuc_chi": 58368012.0, "chenh_lech": -12631988.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0204", "ngay": "2024-05-28", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 81000000.0, "thuc_chi": 96236364.0, "chenh_lech": 15236364.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0205", "ngay": "2024-05-29", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 49000000.0, "thuc_chi": 40853490.0, "chenh_lech": -8146510.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0206", "ngay": "2024-05-29", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 179000000.0, "thuc_chi": 139189508.0, "chenh_lech": -39810492.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0207", "ngay": "2024-05-30", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 165000000.0, "thuc_chi": 192467624.0, "chenh_lech": 27467624.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0208", "ngay": "2024-05-31", "quy": "Q2", "thang": "Tháng 5", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 96000000.0, "thuc_chi": 114333066.0, "chenh_lech": 18333066.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0209", "ngay": "2024-06-01", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 144000000.0, "thuc_chi": 129554289.0, "chenh_lech": -14445711.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0210", "ngay": "2024-06-01", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 180000000.0, "thuc_chi": 202609617.0, "chenh_lech": 22609617.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0211", "ngay": "2024-06-02", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 113000000.0, "thuc_chi": 138046373.0, "chenh_lech": 25046373.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0212", "ngay": "2024-06-03", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 172000000.0, "thuc_chi": 166510991.0, "chenh_lech": -5489009.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0213", "ngay": "2024-06-04", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 28000000.0, "thuc_chi": 31021978.0, "chenh_lech": 3021978.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0214", "ngay": "2024-06-04", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 36000000.0, "thuc_chi": 41731618.0, "chenh_lech": 5731618.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0215", "ngay": "2024-06-05", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 123000000.0, "thuc_chi": 132861158.0, "chenh_lech": 9861158.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0216", "ngay": "2024-06-06", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 142000000.0, "thuc_chi": 108596359.0, "chenh_lech": -33403641.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0217", "ngay": "2024-06-06", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 31000000.0, "thuc_chi": 28609479.0, "chenh_lech": -2390521.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0218", "ngay": "2024-06-07", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Nhân sự (HR)", "hang_muc": "Truyền thông nội bộ", "ngan_sach": 120000000.0, "thuc_chi": 93241223.0, "chenh_lech": -26758777.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0219", "ngay": "2024-06-08", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 182000000.0, "thuc_chi": 152498139.0, "chenh_lech": -29501861.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0220", "ngay": "2024-06-09", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 187000000.0, "thuc_chi": 217099301.0, "chenh_lech": 30099301.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0221", "ngay": "2024-06-09", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 60000000.0, "thuc_chi": 43549876.0, "chenh_lech": -16450124.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0222", "ngay": "2024-06-10", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Vận hành (Ops)", "hang_muc": "Thuê văn phòng & Điện nước", "ngan_sach": 65000000.0, "thuc_chi": 48729546.0, "chenh_lech": -16270454.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0223", "ngay": "2024-06-11", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 25000000.0, "thuc_chi": 21469538.0, "chenh_lech": -3530462.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0224", "ngay": "2024-06-12", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Nhân sự (HR)", "hang_muc": "Teambuilding & Yêu thương", "ngan_sach": 68000000.0, "thuc_chi": 65404285.0, "chenh_lech": -2595715.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0225", "ngay": "2024-06-12", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 50000000.0, "thuc_chi": 49845676.0, "chenh_lech": -154324.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0226", "ngay": "2024-06-13", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 95000000.0, "thuc_chi": 92435136.0, "chenh_lech": -2564864.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0227", "ngay": "2024-06-14", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 168000000.0, "thuc_chi": 161419527.0, "chenh_lech": -6580473.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0228", "ngay": "2024-06-15", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 143000000.0, "thuc_chi": 139070392.0, "chenh_lech": -3929608.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0229", "ngay": "2024-06-15", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 53000000.0, "thuc_chi": 39313458.0, "chenh_lech": -13686542.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0230", "ngay": "2024-06-16", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 193000000.0, "thuc_chi": 163988206.0, "chenh_lech": -29011794.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0231", "ngay": "2024-06-17", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 58000000.0, "thuc_chi": 66357025.0, "chenh_lech": 8357025.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0232", "ngay": "2024-06-17", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 71000000.0, "thuc_chi": 67116525.0, "chenh_lech": -3883475.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0233", "ngay": "2024-06-18", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 22000000.0, "thuc_chi": 23131287.0, "chenh_lech": 1131287.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0234", "ngay": "2024-06-19", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 103000000.0, "thuc_chi": 108733567.0, "chenh_lech": 5733567.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0235", "ngay": "2024-06-20", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 40000000.0, "thuc_chi": 28867389.0, "chenh_lech": -11132611.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0236", "ngay": "2024-06-20", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 165000000.0, "thuc_chi": 165939447.0, "chenh_lech": 939447.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0237", "ngay": "2024-06-21", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 21000000.0, "thuc_chi": 18134381.0, "chenh_lech": -2865619.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0238", "ngay": "2024-06-22", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 96000000.0, "thuc_chi": 106539408.0, "chenh_lech": 10539408.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0239", "ngay": "2024-06-23", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Tài chính", "hang_muc": "Phần mềm Kế toán ERP", "ngan_sach": 117000000.0, "thuc_chi": 84281441.0, "chenh_lech": -32718559.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0240", "ngay": "2024-06-23", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 112000000.0, "thuc_chi": 132915898.0, "chenh_lech": 20915898.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0241", "ngay": "2024-06-24", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 53000000.0, "thuc_chi": 46290713.0, "chenh_lech": -6709287.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0242", "ngay": "2024-06-25", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 155000000.0, "thuc_chi": 161857239.0, "chenh_lech": 6857239.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0243", "ngay": "2024-06-26", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 69000000.0, "thuc_chi": 65830731.0, "chenh_lech": -3169269.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0244", "ngay": "2024-06-26", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 155000000.0, "thuc_chi": 141232921.0, "chenh_lech": -13767079.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0245", "ngay": "2024-06-27", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 43000000.0, "thuc_chi": 48244003.0, "chenh_lech": 5244003.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0246", "ngay": "2024-06-28", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 199000000.0, "thuc_chi": 202863876.0, "chenh_lech": 3863876.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0247", "ngay": "2024-06-28", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 172000000.0, "thuc_chi": 159920737.0, "chenh_lech": -12079263.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0248", "ngay": "2024-06-29", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 17000000.0, "thuc_chi": 16269355.0, "chenh_lech": -730645.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0249", "ngay": "2024-06-30", "quy": "Q2", "thang": "Tháng 6", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 167000000.0, "thuc_chi": 142366849.0, "chenh_lech": -24633151.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0250", "ngay": "2024-07-01", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Vận hành (Ops)", "hang_muc": "Thuê văn phòng & Điện nước", "ngan_sach": 157000000.0, "thuc_chi": 143086605.0, "chenh_lech": -13913395.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0251", "ngay": "2024-07-01", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 51000000.0, "thuc_chi": 57756977.0, "chenh_lech": 6756977.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0252", "ngay": "2024-07-02", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 76000000.0, "thuc_chi": 78840596.0, "chenh_lech": 2840596.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0253", "ngay": "2024-07-03", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 73000000.0, "thuc_chi": 67223446.0, "chenh_lech": -5776554.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0254", "ngay": "2024-07-04", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 124000000.0, "thuc_chi": 102531681.0, "chenh_lech": -21468319.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0255", "ngay": "2024-07-04", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 17000000.0, "thuc_chi": 19625023.0, "chenh_lech": 2625023.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0256", "ngay": "2024-07-05", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 23000000.0, "thuc_chi": 27836066.0, "chenh_lech": 4836066.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0257", "ngay": "2024-07-06", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 177000000.0, "thuc_chi": 197714515.0, "chenh_lech": 20714515.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0258", "ngay": "2024-07-06", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 27000000.0, "thuc_chi": 22223691.0, "chenh_lech": -4776309.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0259", "ngay": "2024-07-07", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 112000000.0, "thuc_chi": 106577817.0, "chenh_lech": -5422183.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0260", "ngay": "2024-07-08", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 151000000.0, "thuc_chi": 109385481.0, "chenh_lech": -41614519.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0261", "ngay": "2024-07-09", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 54000000.0, "thuc_chi": 65468207.0, "chenh_lech": 11468207.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0262", "ngay": "2024-07-09", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 52000000.0, "thuc_chi": 43828958.0, "chenh_lech": -8171042.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0263", "ngay": "2024-07-10", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 51000000.0, "thuc_chi": 41876138.0, "chenh_lech": -9123862.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0264", "ngay": "2024-07-11", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 95000000.0, "thuc_chi": 69714264.0, "chenh_lech": -25285736.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0265", "ngay": "2024-07-12", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 129000000.0, "thuc_chi": 148811114.0, "chenh_lech": 19811114.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0266", "ngay": "2024-07-12", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 47000000.0, "thuc_chi": 55612585.0, "chenh_lech": 8612585.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0267", "ngay": "2024-07-13", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "In ấn & Chứng từ", "ngan_sach": 111000000.0, "thuc_chi": 87305647.0, "chenh_lech": -23694353.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0268", "ngay": "2024-07-14", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 103000000.0, "thuc_chi": 124789618.0, "chenh_lech": 21789618.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0269", "ngay": "2024-07-15", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 21000000.0, "thuc_chi": 24882908.0, "chenh_lech": 3882908.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0270", "ngay": "2024-07-15", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 45000000.0, "thuc_chi": 51938964.0, "chenh_lech": 6938964.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0271", "ngay": "2024-07-16", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 172000000.0, "thuc_chi": 206363143.0, "chenh_lech": 34363143.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0272", "ngay": "2024-07-17", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 26000000.0, "thuc_chi": 18291317.0, "chenh_lech": -7708683.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0273", "ngay": "2024-07-17", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 31000000.0, "thuc_chi": 23675137.0, "chenh_lech": -7324863.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0274", "ngay": "2024-07-18", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 177000000.0, "thuc_chi": 136404482.0, "chenh_lech": -40595518.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0275", "ngay": "2024-07-19", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 77000000.0, "thuc_chi": 70507603.0, "chenh_lech": -6492397.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0276", "ngay": "2024-07-20", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 162000000.0, "thuc_chi": 174690617.0, "chenh_lech": 12690617.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0277", "ngay": "2024-07-20", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Vận hành (Ops)", "hang_muc": "Thuê văn phòng & Điện nước", "ngan_sach": 26000000.0, "thuc_chi": 19163113.0, "chenh_lech": -6836887.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0278", "ngay": "2024-07-21", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 134000000.0, "thuc_chi": 97171187.0, "chenh_lech": -36828813.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0279", "ngay": "2024-07-22", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 178000000.0, "thuc_chi": 187997459.0, "chenh_lech": 9997459.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0280", "ngay": "2024-07-23", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Nhân sự (HR)", "hang_muc": "Truyền thông nội bộ", "ngan_sach": 153000000.0, "thuc_chi": 176230314.0, "chenh_lech": 23230314.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0281", "ngay": "2024-07-23", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 188000000.0, "thuc_chi": 180046975.0, "chenh_lech": -7953025.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0282", "ngay": "2024-07-24", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 53000000.0, "thuc_chi": 52462752.0, "chenh_lech": -537248.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0283", "ngay": "2024-07-25", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 46000000.0, "thuc_chi": 34284240.0, "chenh_lech": -11715760.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0284", "ngay": "2024-07-26", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 95000000.0, "thuc_chi": 116829115.0, "chenh_lech": 21829115.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0285", "ngay": "2024-07-26", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Nhân sự (HR)", "hang_muc": "Truyền thông nội bộ", "ngan_sach": 98000000.0, "thuc_chi": 90030338.0, "chenh_lech": -7969662.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0286", "ngay": "2024-07-27", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 15000000.0, "thuc_chi": 13146127.0, "chenh_lech": -1853873.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0287", "ngay": "2024-07-28", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 39000000.0, "thuc_chi": 42635120.0, "chenh_lech": 3635120.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0288", "ngay": "2024-07-28", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 86000000.0, "thuc_chi": 67732323.0, "chenh_lech": -18267677.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0289", "ngay": "2024-07-29", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 22000000.0, "thuc_chi": 24728154.0, "chenh_lech": 2728154.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0290", "ngay": "2024-07-30", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Nhân sự (HR)", "hang_muc": "Teambuilding & Yêu thương", "ngan_sach": 107000000.0, "thuc_chi": 82623761.0, "chenh_lech": -24376239.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0291", "ngay": "2024-07-31", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 145000000.0, "thuc_chi": 116290345.0, "chenh_lech": -28709655.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0292", "ngay": "2024-07-31", "quy": "Q3", "thang": "Tháng 7", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 140000000.0, "thuc_chi": 150788527.0, "chenh_lech": 10788527.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0293", "ngay": "2024-08-01", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 77000000.0, "thuc_chi": 81491849.0, "chenh_lech": 4491849.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0294", "ngay": "2024-08-02", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 78000000.0, "thuc_chi": 74128944.0, "chenh_lech": -3871056.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0295", "ngay": "2024-08-03", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 124000000.0, "thuc_chi": 153274529.0, "chenh_lech": 29274529.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0296", "ngay": "2024-08-03", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 116000000.0, "thuc_chi": 139118830.0, "chenh_lech": 23118830.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0297", "ngay": "2024-08-04", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 159000000.0, "thuc_chi": 120289195.0, "chenh_lech": -38710805.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0298", "ngay": "2024-08-05", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 182000000.0, "thuc_chi": 128378061.0, "chenh_lech": -53621939.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0299", "ngay": "2024-08-05", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 47000000.0, "thuc_chi": 55713490.0, "chenh_lech": 8713490.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0300", "ngay": "2024-08-06", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Tài chính", "hang_muc": "Phần mềm Kế toán ERP", "ngan_sach": 164000000.0, "thuc_chi": 143852942.0, "chenh_lech": -20147058.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0301", "ngay": "2024-08-07", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 157000000.0, "thuc_chi": 127182973.0, "chenh_lech": -29817027.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0302", "ngay": "2024-08-08", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 75000000.0, "thuc_chi": 81642123.0, "chenh_lech": 6642123.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0303", "ngay": "2024-08-08", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Vận hành (Ops)", "hang_muc": "Thuê văn phòng & Điện nước", "ngan_sach": 128000000.0, "thuc_chi": 155438207.0, "chenh_lech": 27438207.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0304", "ngay": "2024-08-09", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 76000000.0, "thuc_chi": 78792383.0, "chenh_lech": 2792383.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0305", "ngay": "2024-08-10", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Tài chính", "hang_muc": "In ấn & Chứng từ", "ngan_sach": 148000000.0, "thuc_chi": 170128038.0, "chenh_lech": 22128038.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0306", "ngay": "2024-08-11", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 120000000.0, "thuc_chi": 112948076.0, "chenh_lech": -7051924.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0307", "ngay": "2024-08-11", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 155000000.0, "thuc_chi": 149358528.0, "chenh_lech": -5641472.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0308", "ngay": "2024-08-12", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 187000000.0, "thuc_chi": 149630827.0, "chenh_lech": -37369173.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0309", "ngay": "2024-08-13", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 58000000.0, "thuc_chi": 58316097.0, "chenh_lech": 316097.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0310", "ngay": "2024-08-14", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 110000000.0, "thuc_chi": 109819957.0, "chenh_lech": -180043.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0311", "ngay": "2024-08-14", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 49000000.0, "thuc_chi": 40244122.0, "chenh_lech": -8755878.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0312", "ngay": "2024-08-15", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 108000000.0, "thuc_chi": 132670364.0, "chenh_lech": 24670364.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0313", "ngay": "2024-08-16", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 51000000.0, "thuc_chi": 45403476.0, "chenh_lech": -5596524.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0314", "ngay": "2024-08-16", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 166000000.0, "thuc_chi": 165803337.0, "chenh_lech": -196663.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0315", "ngay": "2024-08-17", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 131000000.0, "thuc_chi": 120196867.0, "chenh_lech": -10803133.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0316", "ngay": "2024-08-18", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Tài chính", "hang_muc": "Phần mềm Kế toán ERP", "ngan_sach": 178000000.0, "thuc_chi": 165886478.0, "chenh_lech": -12113522.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0317", "ngay": "2024-08-19", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 139000000.0, "thuc_chi": 113405124.0, "chenh_lech": -25594876.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0318", "ngay": "2024-08-19", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 157000000.0, "thuc_chi": 130260647.0, "chenh_lech": -26739353.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0319", "ngay": "2024-08-20", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 186000000.0, "thuc_chi": 168342415.0, "chenh_lech": -17657585.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0320", "ngay": "2024-08-21", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 180000000.0, "thuc_chi": 174735507.0, "chenh_lech": -5264493.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0321", "ngay": "2024-08-22", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 98000000.0, "thuc_chi": 100560050.0, "chenh_lech": 2560050.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0322", "ngay": "2024-08-22", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 42000000.0, "thuc_chi": 35362882.0, "chenh_lech": -6637118.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0323", "ngay": "2024-08-23", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 182000000.0, "thuc_chi": 187331269.0, "chenh_lech": 5331269.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0324", "ngay": "2024-08-24", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Vận hành (Ops)", "hang_muc": "Chuyển phát & Logistics", "ngan_sach": 24000000.0, "thuc_chi": 17770157.0, "chenh_lech": -6229843.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0325", "ngay": "2024-08-24", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 108000000.0, "thuc_chi": 84257940.0, "chenh_lech": -23742060.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0326", "ngay": "2024-08-25", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 15000000.0, "thuc_chi": 12583354.0, "chenh_lech": -2416646.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0327", "ngay": "2024-08-26", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 179000000.0, "thuc_chi": 160420270.0, "chenh_lech": -18579730.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0328", "ngay": "2024-08-27", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 134000000.0, "thuc_chi": 153177890.0, "chenh_lech": 19177890.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0329", "ngay": "2024-08-27", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Tài chính", "hang_muc": "In ấn & Chứng từ", "ngan_sach": 162000000.0, "thuc_chi": 137434690.0, "chenh_lech": -24565310.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0330", "ngay": "2024-08-28", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 34000000.0, "thuc_chi": 24766730.0, "chenh_lech": -9233270.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0331", "ngay": "2024-08-29", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 73000000.0, "thuc_chi": 63793667.0, "chenh_lech": -9206333.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0332", "ngay": "2024-08-30", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 34000000.0, "thuc_chi": 42249983.0, "chenh_lech": 8249983.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0333", "ngay": "2024-08-30", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 64000000.0, "thuc_chi": 79053040.0, "chenh_lech": 15053040.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0334", "ngay": "2024-08-31", "quy": "Q3", "thang": "Tháng 8", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 52000000.0, "thuc_chi": 40394025.0, "chenh_lech": -11605975.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0335", "ngay": "2024-09-01", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 138000000.0, "thuc_chi": 147713521.0, "chenh_lech": 9713521.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0336", "ngay": "2024-09-02", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 110000000.0, "thuc_chi": 91190958.0, "chenh_lech": -18809042.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0337", "ngay": "2024-09-02", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 185000000.0, "thuc_chi": 199020486.0, "chenh_lech": 14020486.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0338", "ngay": "2024-09-03", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 150000000.0, "thuc_chi": 176330228.0, "chenh_lech": 26330228.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0339", "ngay": "2024-09-04", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 60000000.0, "thuc_chi": 72316367.0, "chenh_lech": 12316367.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0340", "ngay": "2024-09-04", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 62000000.0, "thuc_chi": 65607044.0, "chenh_lech": 3607044.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0341", "ngay": "2024-09-05", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 77000000.0, "thuc_chi": 95283326.0, "chenh_lech": 18283326.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0342", "ngay": "2024-09-06", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 87000000.0, "thuc_chi": 65229549.0, "chenh_lech": -21770451.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0343", "ngay": "2024-09-07", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 139000000.0, "thuc_chi": 155798841.0, "chenh_lech": 16798841.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0344", "ngay": "2024-09-07", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 96000000.0, "thuc_chi": 113552653.0, "chenh_lech": 17552653.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0345", "ngay": "2024-09-08", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 102000000.0, "thuc_chi": 88054366.0, "chenh_lech": -13945634.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0346", "ngay": "2024-09-09", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 90000000.0, "thuc_chi": 93186674.0, "chenh_lech": 3186674.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0347", "ngay": "2024-09-10", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 175000000.0, "thuc_chi": 145363622.0, "chenh_lech": -29636378.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0348", "ngay": "2024-09-10", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 25000000.0, "thuc_chi": 25797418.0, "chenh_lech": 797418.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0349", "ngay": "2024-09-11", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 17000000.0, "thuc_chi": 16971100.0, "chenh_lech": -28900.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0350", "ngay": "2024-09-12", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 168000000.0, "thuc_chi": 127664054.0, "chenh_lech": -40335946.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0351", "ngay": "2024-09-13", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 58000000.0, "thuc_chi": 55806585.0, "chenh_lech": -2193415.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0352", "ngay": "2024-09-13", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 122000000.0, "thuc_chi": 149515639.0, "chenh_lech": 27515639.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0353", "ngay": "2024-09-14", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 94000000.0, "thuc_chi": 99274442.0, "chenh_lech": 5274442.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0354", "ngay": "2024-09-15", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 65000000.0, "thuc_chi": 47654559.0, "chenh_lech": -17345441.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0355", "ngay": "2024-09-15", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 48000000.0, "thuc_chi": 37991154.0, "chenh_lech": -10008846.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0356", "ngay": "2024-09-16", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 41000000.0, "thuc_chi": 49662612.0, "chenh_lech": 8662612.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0357", "ngay": "2024-09-17", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 178000000.0, "thuc_chi": 194856543.0, "chenh_lech": 16856543.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0358", "ngay": "2024-09-18", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 104000000.0, "thuc_chi": 79771884.0, "chenh_lech": -24228116.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0359", "ngay": "2024-09-18", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 88000000.0, "thuc_chi": 100309405.0, "chenh_lech": 12309405.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0360", "ngay": "2024-09-19", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 198000000.0, "thuc_chi": 243462736.0, "chenh_lech": 45462736.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0361", "ngay": "2024-09-20", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 186000000.0, "thuc_chi": 134641102.0, "chenh_lech": -51358898.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0362", "ngay": "2024-09-21", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 133000000.0, "thuc_chi": 139768617.0, "chenh_lech": 6768617.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0363", "ngay": "2024-09-21", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 40000000.0, "thuc_chi": 32664986.0, "chenh_lech": -7335014.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0364", "ngay": "2024-09-22", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 139000000.0, "thuc_chi": 166555374.0, "chenh_lech": 27555374.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0365", "ngay": "2024-09-23", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 82000000.0, "thuc_chi": 69793752.0, "chenh_lech": -12206248.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0366", "ngay": "2024-09-23", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Tài chính", "hang_muc": "Phần mềm Kế toán ERP", "ngan_sach": 103000000.0, "thuc_chi": 77512075.0, "chenh_lech": -25487925.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0367", "ngay": "2024-09-24", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 83000000.0, "thuc_chi": 65769848.0, "chenh_lech": -17230152.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0368", "ngay": "2024-09-25", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 133000000.0, "thuc_chi": 132261445.0, "chenh_lech": -738555.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0369", "ngay": "2024-09-26", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 174000000.0, "thuc_chi": 182852847.0, "chenh_lech": 8852847.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0370", "ngay": "2024-09-26", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 199000000.0, "thuc_chi": 193671132.0, "chenh_lech": -5328868.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0371", "ngay": "2024-09-27", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 160000000.0, "thuc_chi": 147580051.0, "chenh_lech": -12419949.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0372", "ngay": "2024-09-28", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 38000000.0, "thuc_chi": 29283440.0, "chenh_lech": -8716560.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0373", "ngay": "2024-09-29", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 46000000.0, "thuc_chi": 39136264.0, "chenh_lech": -6863736.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0374", "ngay": "2024-09-29", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 178000000.0, "thuc_chi": 143383811.0, "chenh_lech": -34616189.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0375", "ngay": "2024-09-30", "quy": "Q3", "thang": "Tháng 9", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 27000000.0, "thuc_chi": 26608037.0, "chenh_lech": -391963.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0376", "ngay": "2024-10-01", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 41000000.0, "thuc_chi": 43135793.0, "chenh_lech": 2135793.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0377", "ngay": "2024-10-02", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 139000000.0, "thuc_chi": 132226843.0, "chenh_lech": -6773157.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0378", "ngay": "2024-10-02", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 116000000.0, "thuc_chi": 116786582.0, "chenh_lech": 786582.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0379", "ngay": "2024-10-03", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 22000000.0, "thuc_chi": 22423747.0, "chenh_lech": 423747.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0380", "ngay": "2024-10-04", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Vận hành (Ops)", "hang_muc": "Trang thiết bị văn phòng", "ngan_sach": 45000000.0, "thuc_chi": 50182236.0, "chenh_lech": 5182236.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0381", "ngay": "2024-10-04", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 69000000.0, "thuc_chi": 76996398.0, "chenh_lech": 7996398.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0382", "ngay": "2024-10-05", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 17000000.0, "thuc_chi": 20569112.0, "chenh_lech": 3569112.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0383", "ngay": "2024-10-06", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 118000000.0, "thuc_chi": 83899710.0, "chenh_lech": -34100290.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0384", "ngay": "2024-10-07", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 79000000.0, "thuc_chi": 91886346.0, "chenh_lech": 12886346.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0385", "ngay": "2024-10-07", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 46000000.0, "thuc_chi": 35431151.0, "chenh_lech": -10568849.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0386", "ngay": "2024-10-08", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 156000000.0, "thuc_chi": 119294286.0, "chenh_lech": -36705714.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0387", "ngay": "2024-10-09", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 99000000.0, "thuc_chi": 88157220.0, "chenh_lech": -10842780.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0388", "ngay": "2024-10-10", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 81000000.0, "thuc_chi": 74385526.0, "chenh_lech": -6614474.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0389", "ngay": "2024-10-10", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 164000000.0, "thuc_chi": 159626106.0, "chenh_lech": -4373894.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0390", "ngay": "2024-10-11", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Tài chính", "hang_muc": "Phần mềm Kế toán ERP", "ngan_sach": 26000000.0, "thuc_chi": 31507511.0, "chenh_lech": 5507511.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0391", "ngay": "2024-10-12", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 49000000.0, "thuc_chi": 52472487.0, "chenh_lech": 3472487.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0392", "ngay": "2024-10-13", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 94000000.0, "thuc_chi": 76759494.0, "chenh_lech": -17240506.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0393", "ngay": "2024-10-13", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 80000000.0, "thuc_chi": 62766810.0, "chenh_lech": -17233190.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0394", "ngay": "2024-10-14", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 24000000.0, "thuc_chi": 27656743.0, "chenh_lech": 3656743.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0395", "ngay": "2024-10-15", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 178000000.0, "thuc_chi": 183963715.0, "chenh_lech": 5963715.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0396", "ngay": "2024-10-15", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 194000000.0, "thuc_chi": 189423800.0, "chenh_lech": -4576200.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0397", "ngay": "2024-10-16", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Tài chính", "hang_muc": "Chi phí Pháp lý", "ngan_sach": 131000000.0, "thuc_chi": 100472945.0, "chenh_lech": -30527055.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0398", "ngay": "2024-10-17", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 93000000.0, "thuc_chi": 114363337.0, "chenh_lech": 21363337.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0399", "ngay": "2024-10-18", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 155000000.0, "thuc_chi": 188332292.0, "chenh_lech": 33332292.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0400", "ngay": "2024-10-18", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 148000000.0, "thuc_chi": 103627065.0, "chenh_lech": -44372935.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0401", "ngay": "2024-10-19", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 165000000.0, "thuc_chi": 129296255.0, "chenh_lech": -35703745.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0402", "ngay": "2024-10-20", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 24000000.0, "thuc_chi": 19595170.0, "chenh_lech": -4404830.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0403", "ngay": "2024-10-21", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 97000000.0, "thuc_chi": 77004964.0, "chenh_lech": -19995036.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0404", "ngay": "2024-10-21", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 21000000.0, "thuc_chi": 22694463.0, "chenh_lech": 1694463.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0405", "ngay": "2024-10-22", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 117000000.0, "thuc_chi": 96629367.0, "chenh_lech": -20370633.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0406", "ngay": "2024-10-23", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 66000000.0, "thuc_chi": 70002769.0, "chenh_lech": 4002769.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0407", "ngay": "2024-10-23", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 76000000.0, "thuc_chi": 80540368.0, "chenh_lech": 4540368.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0408", "ngay": "2024-10-24", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 28000000.0, "thuc_chi": 22324062.0, "chenh_lech": -5675938.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0409", "ngay": "2024-10-25", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 76000000.0, "thuc_chi": 73320185.0, "chenh_lech": -2679815.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0410", "ngay": "2024-10-26", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 134000000.0, "thuc_chi": 133252356.0, "chenh_lech": -747644.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0411", "ngay": "2024-10-26", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 195000000.0, "thuc_chi": 222464855.0, "chenh_lech": 27464855.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0412", "ngay": "2024-10-27", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 153000000.0, "thuc_chi": 145335852.0, "chenh_lech": -7664148.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0413", "ngay": "2024-10-28", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 40000000.0, "thuc_chi": 30798394.0, "chenh_lech": -9201606.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0414", "ngay": "2024-10-29", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 96000000.0, "thuc_chi": 92333757.0, "chenh_lech": -3666243.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0415", "ngay": "2024-10-29", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 180000000.0, "thuc_chi": 164846978.0, "chenh_lech": -15153022.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0416", "ngay": "2024-10-30", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 31000000.0, "thuc_chi": 32930701.0, "chenh_lech": 1930701.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0417", "ngay": "2024-10-31", "quy": "Q4", "thang": "Tháng 10", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 62000000.0, "thuc_chi": 52084268.0, "chenh_lech": -9915732.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0418", "ngay": "2024-11-01", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 35000000.0, "thuc_chi": 40383794.0, "chenh_lech": 5383794.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0419", "ngay": "2024-11-01", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 93000000.0, "thuc_chi": 110592345.0, "chenh_lech": 17592345.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0420", "ngay": "2024-11-02", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 101000000.0, "thuc_chi": 108486653.0, "chenh_lech": 7486653.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0421", "ngay": "2024-11-03", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 143000000.0, "thuc_chi": 105769433.0, "chenh_lech": -37230567.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0422", "ngay": "2024-11-03", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 162000000.0, "thuc_chi": 179111994.0, "chenh_lech": 17111994.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0423", "ngay": "2024-11-04", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 153000000.0, "thuc_chi": 188788608.0, "chenh_lech": 35788608.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0424", "ngay": "2024-11-05", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 65000000.0, "thuc_chi": 51724408.0, "chenh_lech": -13275592.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0425", "ngay": "2024-11-06", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 52000000.0, "thuc_chi": 38762865.0, "chenh_lech": -13237135.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0426", "ngay": "2024-11-06", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 87000000.0, "thuc_chi": 79175811.0, "chenh_lech": -7824189.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0427", "ngay": "2024-11-07", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 140000000.0, "thuc_chi": 118074924.0, "chenh_lech": -21925076.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0428", "ngay": "2024-11-08", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 133000000.0, "thuc_chi": 96168731.0, "chenh_lech": -36831269.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0429", "ngay": "2024-11-09", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 154000000.0, "thuc_chi": 147976268.0, "chenh_lech": -6023732.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0430", "ngay": "2024-11-09", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 174000000.0, "thuc_chi": 193390603.0, "chenh_lech": 19390603.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0431", "ngay": "2024-11-10", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 29000000.0, "thuc_chi": 22067386.0, "chenh_lech": -6932614.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0432", "ngay": "2024-11-11", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 73000000.0, "thuc_chi": 73186191.0, "chenh_lech": 186191.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0433", "ngay": "2024-11-11", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 172000000.0, "thuc_chi": 208218838.0, "chenh_lech": 36218838.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0434", "ngay": "2024-11-12", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 134000000.0, "thuc_chi": 166941015.0, "chenh_lech": 32941015.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0435", "ngay": "2024-11-13", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Tài chính", "hang_muc": "Kiểm toán & Tư vấn Thuế", "ngan_sach": 26000000.0, "thuc_chi": 31340649.0, "chenh_lech": 5340649.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0436", "ngay": "2024-11-14", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 140000000.0, "thuc_chi": 162833888.0, "chenh_lech": 22833888.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0437", "ngay": "2024-11-14", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 103000000.0, "thuc_chi": 125203033.0, "chenh_lech": 22203033.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0438", "ngay": "2024-11-15", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 43000000.0, "thuc_chi": 46307298.0, "chenh_lech": 3307298.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0439", "ngay": "2024-11-16", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Tài chính", "hang_muc": "Chi phí Giao dịch Ngân hàng", "ngan_sach": 165000000.0, "thuc_chi": 191793799.0, "chenh_lech": 26793799.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0440", "ngay": "2024-11-17", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 111000000.0, "thuc_chi": 108735411.0, "chenh_lech": -2264589.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0441", "ngay": "2024-11-17", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 125000000.0, "thuc_chi": 147803267.0, "chenh_lech": 22803267.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0442", "ngay": "2024-11-18", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 158000000.0, "thuc_chi": 181141267.0, "chenh_lech": 23141267.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0443", "ngay": "2024-11-19", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 146000000.0, "thuc_chi": 110164001.0, "chenh_lech": -35835999.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0444", "ngay": "2024-11-20", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 24000000.0, "thuc_chi": 26598994.0, "chenh_lech": 2598994.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0445", "ngay": "2024-11-20", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 126000000.0, "thuc_chi": 142516770.0, "chenh_lech": 16516770.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0446", "ngay": "2024-11-21", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 104000000.0, "thuc_chi": 120845939.0, "chenh_lech": 16845939.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0447", "ngay": "2024-11-22", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 176000000.0, "thuc_chi": 196639874.0, "chenh_lech": 20639874.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0448", "ngay": "2024-11-22", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 84000000.0, "thuc_chi": 99301265.0, "chenh_lech": 15301265.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0449", "ngay": "2024-11-23", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 146000000.0, "thuc_chi": 160182296.0, "chenh_lech": 14182296.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0450", "ngay": "2024-11-24", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 68000000.0, "thuc_chi": 73616118.0, "chenh_lech": 5616118.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0451", "ngay": "2024-11-25", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 71000000.0, "thuc_chi": 64838653.0, "chenh_lech": -6161347.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0452", "ngay": "2024-11-25", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 28000000.0, "thuc_chi": 30740433.0, "chenh_lech": 2740433.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0453", "ngay": "2024-11-26", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 146000000.0, "thuc_chi": 106440158.0, "chenh_lech": -39559842.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0454", "ngay": "2024-11-27", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Marketing", "hang_muc": "Sự kiện Launching", "ngan_sach": 173000000.0, "thuc_chi": 123282056.0, "chenh_lech": -49717944.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0455", "ngay": "2024-11-28", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 164000000.0, "thuc_chi": 177526491.0, "chenh_lech": 13526491.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0456", "ngay": "2024-11-28", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Nhân sự (HR)", "hang_muc": "Truyền thông nội bộ", "ngan_sach": 173000000.0, "thuc_chi": 199611183.0, "chenh_lech": 26611183.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0457", "ngay": "2024-11-29", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 108000000.0, "thuc_chi": 95094649.0, "chenh_lech": -12905351.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0458", "ngay": "2024-11-30", "quy": "Q4", "thang": "Tháng 11", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 127000000.0, "thuc_chi": 130686036.0, "chenh_lech": 3686036.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0459", "ngay": "2024-12-01", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Nhân sự (HR)", "hang_muc": "Tuyển dụng & Headhunt", "ngan_sach": 132000000.0, "thuc_chi": 139050233.0, "chenh_lech": 7050233.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0460", "ngay": "2024-12-01", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 61000000.0, "thuc_chi": 46670179.0, "chenh_lech": -14329821.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0461", "ngay": "2024-12-02", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 104000000.0, "thuc_chi": 106420407.0, "chenh_lech": 2420407.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0462", "ngay": "2024-12-03", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 64000000.0, "thuc_chi": 50618352.0, "chenh_lech": -13381648.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0463", "ngay": "2024-12-03", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 95000000.0, "thuc_chi": 115072484.0, "chenh_lech": 20072484.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0464", "ngay": "2024-12-04", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Vận hành (Ops)", "hang_muc": "Văn phòng phẩm & Vật tư", "ngan_sach": 49000000.0, "thuc_chi": 45879251.0, "chenh_lech": -3120749.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0465", "ngay": "2024-12-05", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 63000000.0, "thuc_chi": 59179000.0, "chenh_lech": -3821000.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0466", "ngay": "2024-12-06", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Nhân sự (HR)", "hang_muc": "Đào tạo & Workshop Internal", "ngan_sach": 18000000.0, "thuc_chi": 13093436.0, "chenh_lech": -4906564.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0467", "ngay": "2024-12-06", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Vận hành (Ops)", "hang_muc": "Thuê văn phòng & Điện nước", "ngan_sach": 114000000.0, "thuc_chi": 127797658.0, "chenh_lech": 13797658.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0468", "ngay": "2024-12-07", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 45000000.0, "thuc_chi": 54334920.0, "chenh_lech": 9334920.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0469", "ngay": "2024-12-08", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Vận hành (Ops)", "hang_muc": "Sửa chữa & Bảo trì", "ngan_sach": 120000000.0, "thuc_chi": 102624346.0, "chenh_lech": -17375654.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0470", "ngay": "2024-12-09", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Quà tặng Khách hàng", "ngan_sach": 28000000.0, "thuc_chi": 23443011.0, "chenh_lech": -4556989.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0471", "ngay": "2024-12-09", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Tài chính", "hang_muc": "In ấn & Chứng từ", "ngan_sach": 87000000.0, "thuc_chi": 84230281.0, "chenh_lech": -2769719.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0472", "ngay": "2024-12-10", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 121000000.0, "thuc_chi": 93966779.0, "chenh_lech": -27033221.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0473", "ngay": "2024-12-11", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 21000000.0, "thuc_chi": 15698204.0, "chenh_lech": -5301796.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0474", "ngay": "2024-12-11", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Nhân sự (HR)", "hang_muc": "Teambuilding & Yêu thương", "ngan_sach": 162000000.0, "thuc_chi": 124803749.0, "chenh_lech": -37196251.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0475", "ngay": "2024-12-12", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 134000000.0, "thuc_chi": 112973629.0, "chenh_lech": -21026371.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0476", "ngay": "2024-12-13", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 96000000.0, "thuc_chi": 74854155.0, "chenh_lech": -21145845.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0477", "ngay": "2024-12-14", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Hạ tầng Cloud & AWS", "ngan_sach": 161000000.0, "thuc_chi": 140035273.0, "chenh_lech": -20964727.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0478", "ngay": "2024-12-14", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 183000000.0, "thuc_chi": 130317838.0, "chenh_lech": -52682162.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0479", "ngay": "2024-12-15", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bản quyền Phần mềm & SaaS", "ngan_sach": 85000000.0, "thuc_chi": 91465504.0, "chenh_lech": 6465504.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0480", "ngay": "2024-12-16", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 75000000.0, "thuc_chi": 87980762.0, "chenh_lech": 12980762.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0481", "ngay": "2024-12-17", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 31000000.0, "thuc_chi": 32149947.0, "chenh_lech": 1149947.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0482", "ngay": "2024-12-17", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Đào tạo kỹ năng Sales", "ngan_sach": 19000000.0, "thuc_chi": 23182545.0, "chenh_lech": 4182545.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0483", "ngay": "2024-12-18", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Sản xuất Content & Video", "ngan_sach": 158000000.0, "thuc_chi": 146382425.0, "chenh_lech": -11617575.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0484", "ngay": "2024-12-19", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 102000000.0, "thuc_chi": 115549024.0, "chenh_lech": 13549024.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0485", "ngay": "2024-12-20", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 77000000.0, "thuc_chi": 74958788.0, "chenh_lech": -2041212.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0486", "ngay": "2024-12-20", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 124000000.0, "thuc_chi": 138230143.0, "chenh_lech": 14230143.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0487", "ngay": "2024-12-21", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 106000000.0, "thuc_chi": 89095261.0, "chenh_lech": -16904739.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0488", "ngay": "2024-12-22", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Công tác phí & Tiếp khách", "ngan_sach": 42000000.0, "thuc_chi": 47233488.0, "chenh_lech": 5233488.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0489", "ngay": "2024-12-22", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Mua sắm Thiết bị & Server", "ngan_sach": 58000000.0, "thuc_chi": 57784587.0, "chenh_lech": -215413.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0490", "ngay": "2024-12-23", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Nhân sự (HR)", "hang_muc": "Bảo hiểm & Phúc lợi extra", "ngan_sach": 37000000.0, "thuc_chi": 42629799.0, "chenh_lech": 5629799.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0491", "ngay": "2024-12-24", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Outsourcing Dev", "ngan_sach": 65000000.0, "thuc_chi": 52493031.0, "chenh_lech": -12506969.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Phạm Minh D (Finance Mgr)"}, {"ma_gd": "GD-2024-0492", "ngay": "2024-12-25", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Kênh KOLs & Influencer", "ngan_sach": 55000000.0, "thuc_chi": 55972199.0, "chenh_lech": 972199.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0493", "ngay": "2024-12-25", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hoa hồng Sales", "ngan_sach": 61000000.0, "thuc_chi": 49270459.0, "chenh_lech": -11729541.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0494", "ngay": "2024-12-26", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Công nghệ (IT)", "hang_muc": "Bảo mật & Backup", "ngan_sach": 26000000.0, "thuc_chi": 20574290.0, "chenh_lech": -5425710.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0495", "ngay": "2024-12-27", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 128000000.0, "thuc_chi": 101487336.0, "chenh_lech": -26512664.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}, {"ma_gd": "GD-2024-0496", "ngay": "2024-12-28", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 174000000.0, "thuc_chi": 184415797.0, "chenh_lech": 10415797.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0497", "ngay": "2024-12-28", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 46000000.0, "thuc_chi": 35176392.0, "chenh_lech": -10823608.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Lê Hoàng C (VP)"}, {"ma_gd": "GD-2024-0498", "ngay": "2024-12-29", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Quảng cáo Meta & Google Ads", "ngan_sach": 77000000.0, "thuc_chi": 74454952.0, "chenh_lech": -2545048.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Vũ Tuyết E (Controller)"}, {"ma_gd": "GD-2024-0499", "ngay": "2024-12-30", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Marketing", "hang_muc": "Công cụ SEO & Analytics", "ngan_sach": 176000000.0, "thuc_chi": 139264433.0, "chenh_lech": -36735567.0, "trang_thai": "Trong ngân sách", "nguoi_duyet": "Trần Thị B (CEO)"}, {"ma_gd": "GD-2024-0500", "ngay": "2024-12-31", "quy": "Q4", "thang": "Tháng 12", "phong_ban": "Kinh doanh (Sales)", "hang_muc": "Hội thảo & Expo", "ngan_sach": 83000000.0, "thuc_chi": 83652846.0, "chenh_lech": 652846.0, "trang_thai": "Vượt ngân sách", "nguoi_duyet": "Nguyễn Văn A (CFO)"}];
+    let globalRecords = EMBEDDED_RECORDS;
+    let activeQuarter = 'ALL';
+    let activeDept = 'ALL';
+    let searchQuery = '';
+
+    // --- Chart Instances ---
+    let barChartInstance = null;
+    let donutChartInstance = null;
+
+    // --- Format Helper ---
+    function formatVND(amount) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    }
+
+    function formatShortVND(num) {
+      if (Math.abs(num) >= 1e9) return (num / 1e9).toFixed(2) + ' tỷ ₫';
+      if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(1) + ' tr ₫';
+      return new Intl.NumberFormat('vi-VN').format(num) + ' ₫';
+    }
+
+    // --- Counter Animation ---
+    const animatedValues = {};
+    function animateCounter(id, targetVal, formatFn, duration = 1200) {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      const startVal = animatedValues[id] || 0;
+      animatedValues[id] = targetVal;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = startVal + (targetVal - startVal) * eased;
+
+        el.textContent = formatFn(current);
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          el.textContent = formatFn(targetVal);
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    // --- Live Clock ---
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').textContent = now.toLocaleTimeString('vi-VN', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- Initialize Chart.js Defaults ---
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    function initCharts() {
+      // 1. Grouped Bar Chart (Budget vs Expense)
+      const ctxBar = document.getElementById('barChart').getContext('2d');
+      barChartInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Ngân Sách (VND)',
+              data: [],
+              backgroundColor: '#7C3AED', // Tím Hoàng Gia
+              borderColor: '#9333ea',
+              borderWidth: 1,
+              borderRadius: 6
+            },
+            {
+              label: 'Thực Chi (VND)',
+              data: [],
+              backgroundColor: '#06B6D4', // Xanh Ngọc
+              borderColor: '#0891b2',
+              borderWidth: 1,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { font: { weight: '600' }, usePointStyle: true, boxWidth: 8 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${formatVND(context.raw)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) { return formatShortVND(value); }
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Donut Chart (Department Spending Proportion)
+      const ctxDonut = document.getElementById('donutChart').getContext('2d');
+      donutChartInstance = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: [
+              '#7C3AED', '#06B6D4', '#F43F5E', '#10B981', '#F59E0B', '#3B82F6'
+            ],
+            borderColor: '#0f172a',
+            borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { size: 11, weight: '600' }, boxWidth: 10, padding: 12 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : '0';
+                  return ` ${context.label}: ${formatShortVND(context.raw)} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // --- Filter & Data Update Logic ---
+    function renderDashboard() {
+      // 1. Filter Records
+      const filtered = globalRecords.filter(r => {
+        const matchQ = (activeQuarter === 'ALL') || (r.quy === activeQuarter);
+        const matchD = (activeDept === 'ALL') || (r.phong_ban === activeDept);
+        const matchS = (!searchQuery) || 
+                       (r.ma_gd.toLowerCase().includes(searchQuery)) ||
+                       (r.hang_muc.toLowerCase().includes(searchQuery)) ||
+                       (r.nguoi_duyet.toLowerCase().includes(searchQuery)) ||
+                       (r.phong_ban.toLowerCase().includes(searchQuery));
+        return matchQ && matchD && matchS;
+      });
+
+      // 2. Compute KPI Metrics
+      let totalBudget = 0;
+      let totalExpense = 0;
+      let overrunCount = 0;
+      let overrunSum = 0;
+
+      filtered.forEach(r => {
+        totalBudget += r.ngan_sach;
+        totalExpense += r.thuc_chi;
+        if (r.thuc_chi > r.ngan_sach) {
+          overrunCount += 1;
+          overrunSum += (r.thuc_chi - r.ngan_sach);
+        }
+      });
+
+      // Update KPIs with Counter animation
+      animateCounter('kpi-budget-val', totalBudget, formatShortVND);
+      animateCounter('kpi-expense-val', totalExpense, formatShortVND);
+      animateCounter('kpi-overrun-val', overrunCount, val => Math.round(val) + ' giao dịch');
+
+      const pctUsed = totalBudget > 0 ? ((totalExpense / totalBudget) * 100).toFixed(1) : '0.0';
+      document.getElementById('kpi-expense-sub').textContent = `${pctUsed}% Ngân sách`;
+      document.getElementById('kpi-overrun-sub').textContent = `+${formatShortVND(overrunSum)}`;
+
+      // 3. Aggregate for Bar Chart & Donut Chart
+      const deptStats = {};
+      filtered.forEach(r => {
+        const d = r.phong_ban;
+        if (!deptStats[d]) {
+          deptStats[d] = { budget: 0, expense: 0 };
+        }
+        deptStats[d].budget += r.ngan_sach;
+        deptStats[d].expense += r.thuc_chi;
+      });
+
+      const labels = Object.keys(deptStats);
+      const budgetData = labels.map(l => deptStats[l].budget);
+      const expenseData = labels.map(l => deptStats[l].expense);
+
+      // Update Grouped Bar Chart
+      if (barChartInstance) {
+        barChartInstance.data.labels = labels;
+        barChartInstance.data.datasets[0].data = budgetData;
+        barChartInstance.data.datasets[1].data = expenseData;
+        barChartInstance.update();
+      }
+
+      // Update Donut Chart
+      if (donutChartInstance) {
+        donutChartInstance.data.labels = labels;
+        donutChartInstance.data.datasets[0].data = expenseData;
+        donutChartInstance.update();
+      }
+
+      // 4. Render Data Table (Top 30 matching records)
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      document.getElementById('table-subtitle').textContent = 
+        `Hiển thị ${Math.min(30, filtered.length)} / ${filtered.length} giao dịch phù hợp`;
+
+      filtered.slice(0, 30).forEach(r => {
+        const tr = document.createElement('tr');
+        const isOverrun = r.thuc_chi > r.ngan_sach;
+        if (isOverrun) tr.className = 'row-overrun';
+
+        const diffStr = (r.chenh_lech > 0 ? '+' : '') + formatShortVND(r.chenh_lech);
+        const statusBadge = isOverrun 
+          ? `<span class="status-pill warn">⚠️ Vượt NS</span>` 
+          : `<span class="status-pill ok">✓ Trong NS</span>`;
+
+        tr.innerHTML = `
+          <td><strong>${r.ma_gd}</strong></td>
+          <td>${r.ngay}</td>
+          <td><span style="color: var(--text-sub);">${r.quy}</span></td>
+          <td>${r.phong_ban}</td>
+          <td>${r.hang_muc}</td>
+          <td style="text-align: right; color: #c084fc; font-weight: 600;">${formatVND(r.ngan_sach)}</td>
+          <td style="text-align: right; color: #38bdf8; font-weight: 600;">${formatVND(r.thuc_chi)}</td>
+          <td style="text-align: right; font-weight: 700; color: ${isOverrun ? 'var(--color-overrun)' : '#34d399'};">${diffStr}</td>
+          <td style="text-align: center;">${statusBadge}</td>
+          <td>${r.nguoi_duyet}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- Setup Filter Event Listeners ---
+    function setupFilterListeners() {
+      // Quarter buttons
+      document.querySelectorAll('#quarter-filters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('#quarter-filters .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeQuarter = btn.dataset.quarter;
+          renderDashboard();
+        });
+      });
+
+      // Dept buttons
+      document.querySelectorAll('#dept-filters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('#dept-filters .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeDept = btn.dataset.dept;
+          renderDashboard();
+        });
+      });
+
+      // Reset button
+      document.getElementById('btn-reset-filters').addEventListener('click', () => {
+        activeQuarter = 'ALL';
+        activeDept = 'ALL';
+        searchQuery = '';
+        document.getElementById('table-search').value = '';
+
+        document.querySelectorAll('#quarter-filters .filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#quarter-filters .filter-btn[data-quarter="ALL"]').classList.add('active');
+
+        document.querySelectorAll('#dept-filters .filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#dept-filters .filter-btn[data-dept="ALL"]').classList.add('active');
+
+        renderDashboard();
+      });
+
+      // Search bar
+      document.getElementById('table-search').addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        renderDashboard();
+      });
+    }
+
+    // --- Fetch Live Data Every 2 Seconds ---
+    async function fetchLiveData() {
+      try {
+        const apiUrl = (location.protocol === 'http:' || location.protocol === 'https:') 
+          ? '/api/data' 
+          : 'http://localhost:9091/api/data';
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('API response not ok');
+        const data = await res.json();
+
+        if (data && data.records && data.records.length > 0) {
+          globalRecords = data.records;
+          document.getElementById('last-updated').textContent = `Đồng bộ Live: ${data.timestamp || new Date().toLocaleTimeString()}`;
+          renderDashboard();
+        }
+      } catch (err) {
+        console.warn('Real-time API sync waiting for server...', err);
+        if (globalRecords && globalRecords.length > 0) {
+          document.getElementById('last-updated').textContent = `Đã nạp ${globalRecords.length} bản ghi`;
+          renderDashboard();
+        } else {
+          document.getElementById('last-updated').textContent = 'Đang kết nối server...';
+        }
+      }
+    }
+
+    // --- DOM Loaded Bootstrap ---
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      setupFilterListeners();
+      renderDashboard(); // Render instantly with embedded dataset!
+      fetchLiveData();
+      setInterval(fetchLiveData, 2000); // 2-second real-time polling
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Performance Dashboard | Q3 2025</title>
+  <meta name="description" content="Dashboard báo cáo hiệu suất kinh doanh Q3 2025 theo tiêu chuẩn Glassmorphism Dark Mode." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ============================================
+       CSS VARIABLES — Design Tokens
+    ============================================ */
+    :root {
+      --bg-base:      #0a0e1a;
+      --bg-surface:   #0f1629;
+      --bg-glass:     rgba(255, 255, 255, 0.05);
+      --border-glass: rgba(255, 255, 255, 0.10);
+      --border-hover: rgba(255, 255, 255, 0.20);
+
+      --text-primary:   #e8eaf6;
+      --text-secondary: #90a4c8;
+      --text-muted:     #546e8a;
+
+      --accent-blue:   #6366f1;
+      --accent-green:  #10b981;
+      --accent-amber:  #f59e0b;
+      --accent-rose:   #f43f5e;
+      --accent-cyan:   #06b6d4;
+      --accent-purple: #a855f7;
+
+      --radius-card: 16px;
+      --radius-sm:   8px;
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.35);
+      --shadow-hover: 0 20px 60px rgba(0, 0, 0, 0.5);
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ============================================
+       RESET & BASE
+    ============================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(ellipse at 15% 60%, rgba(99, 102, 241, 0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+      min-height: 100vh;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* ============================================
+       GLASS CARD BASE
+    ============================================ */
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover), inset 0 1px 0 rgba(255,255,255,0.12);
+      border-color: var(--border-hover);
+    }
+
+    /* ============================================
+       HEADER
+    ============================================ */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border-glass);
+      background: rgba(10, 14, 26, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: #fff;
+    }
+    .header-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .header-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+      color: var(--accent-green); letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .pulse-dot {
+      width: 6px; height: 6px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse-anim 2s ease-in-out infinite;
+    }
+    @keyframes pulse-anim {
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+      50% { opacity: 0.6; transform: scale(1.4); box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+    }
+    #live-clock {
+      font-size: 15px; font-weight: 600;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.5px;
+    }
+
+    /* ============================================
+       MAIN LAYOUT
+    ============================================ */
+    .dashboard-grid {
+      display: grid;
+      gap: 22px;
+      padding: 28px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* ============================================
+       KPI CARDS
+    ============================================ */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    .kpi-card {
+      position: relative;
+      padding: 22px 24px;
+      overflow: hidden;
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      opacity: 0.12;
+      transition: opacity var(--transition);
+    }
+    .kpi-card:hover::after { opacity: 0.22; }
+
+    .kpi-card.blue::after  { background: var(--accent-blue); }
+    .kpi-card.green::after { background: var(--accent-green); }
+    .kpi-card.amber::after { background: var(--accent-amber); }
+    .kpi-card.rose::after  { background: var(--accent-rose); }
+    .kpi-card.cyan::after  { background: var(--accent-cyan); }
+
+    /* Top accent line */
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
+    }
+    .kpi-card.blue::before  { background: linear-gradient(90deg, var(--accent-blue), transparent); }
+    .kpi-card.green::before { background: linear-gradient(90deg, var(--accent-green), transparent); }
+    .kpi-card.amber::before { background: linear-gradient(90deg, var(--accent-amber), transparent); }
+    .kpi-card.rose::before  { background: linear-gradient(90deg, var(--accent-rose), transparent); }
+    .kpi-card.cyan::before  { background: linear-gradient(90deg, var(--accent-cyan), transparent); }
+
+    .kpi-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .kpi-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .kpi-card.blue  .kpi-icon { background: rgba(99,102,241,0.18); }
+    .kpi-card.green .kpi-icon { background: rgba(16,185,129,0.18); }
+    .kpi-card.amber .kpi-icon { background: rgba(245,158,11,0.18); }
+    .kpi-card.rose  .kpi-icon { background: rgba(244,63,94,0.18); }
+    .kpi-card.cyan  .kpi-icon { background: rgba(6,182,212,0.18); }
+
+    .kpi-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-value {
+      font-size: 30px; font-weight: 800;
+      color: var(--text-primary); line-height: 1.1;
+      margin-bottom: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi-footer { display: flex; align-items: center; gap: 6px; }
+    .kpi-trend {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .kpi-trend.up   { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+    .kpi-trend.down { background: rgba(244,63,94,0.15);  color: var(--accent-rose); }
+    .kpi-compare { font-size: 11px; color: var(--text-muted); }
+
+    /* ============================================
+       CHART ROW
+    ============================================ */
+    .chart-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 22px;
+    }
+    .chart-card { padding: 24px; }
+    .chart-card-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .chart-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .chart-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .chart-badge {
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(99,102,241,0.15); color: var(--accent-blue);
+    }
+    .chart-canvas-wrap { position: relative; }
+
+    /* ============================================
+       BOTTOM ROW: Table + Mini stats
+    ============================================ */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 22px;
+    }
+    .section-header { margin-bottom: 18px; }
+    .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .section-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Data table */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      text-align: left;
+      padding: 0 14px 12px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+    .data-table td {
+      padding: 12px 14px;
+      font-size: 13px; color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background var(--transition);
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 6px;
+      font-size: 11px; font-weight: 700;
+    }
+    .rank-1 { background: rgba(245,158,11,0.2); color: var(--accent-amber); }
+    .rank-2 { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+    .rank-3 { background: rgba(99,102,241,0.15); color: var(--accent-blue); }
+    .rank-n { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+    .bar-cell { width: 120px; }
+    .mini-bar-bg { background: rgba(255,255,255,0.06); border-radius: 999px; height: 6px; overflow: hidden; }
+    .mini-bar { height: 100%; border-radius: 999px; transition: width 1s ease; }
+
+    /* Channel Performance */
+    .channel-list { display: flex; flex-direction: column; gap: 14px; }
+    .channel-item { display: flex; align-items: center; gap: 12px; }
+    .channel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .channel-name { flex: 1; font-size: 13px; color: var(--text-secondary); }
+    .channel-pct { font-size: 13px; font-weight: 600; color: var(--text-primary); min-width: 40px; text-align: right; }
+    .channel-bar-wrap { flex: 2; }
+    .channel-bar-bg { background: rgba(255,255,255,0.06); border-radius: 999px; height: 8px; overflow: hidden; }
+    .channel-bar { height: 100%; border-radius: 999px; }
+
+    /* ============================================
+       FOOTER
+    ============================================ */
+    .dashboard-footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid var(--border-glass);
+      font-size: 12px; color: var(--text-muted);
+    }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 1200px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .chart-row { grid-template-columns: 1fr; }
+      .bottom-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .dashboard-grid { padding: 14px; gap: 14px; }
+      .kpi-value { font-size: 24px; }
+      .dashboard-header { padding: 14px 16px; }
+      .header-title { font-size: 15px; }
+    }
+
+    /* ============================================
+       FADE IN ANIMATION
+    ============================================ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .glass-card { animation: fadeInUp 0.5s ease both; }
+    .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+    .kpi-card:nth-child(2) { animation-delay: 0.10s; }
+    .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+    .kpi-card:nth-child(4) { animation-delay: 0.20s; }
+  </style>
+</head>
+
+<body>
+  <!-- ========================== HEADER ========================== -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <div class="logo-icon">S</div>
+      <div>
+        <div class="header-title">Sales Performance Dashboard</div>
+        <div class="header-subtitle">Quý 3 · 2025 | Cập nhật theo giờ thực</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <span class="pulse-dot"></span>
+        Live
+      </div>
+      <span id="live-clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- ========================== MAIN ========================== -->
+  <main class="dashboard-grid">
+
+    <!-- KPI CARDS -->
+    <section class="kpi-row" aria-label="Key Performance Indicators">
+
+      <div class="glass-card kpi-card blue">
+        <div class="kpi-header">
+          <span class="kpi-label">Doanh thu</span>
+          <div class="kpi-icon">💰</div>
+        </div>
+        <div class="kpi-value" id="kpi-revenue" data-target="4827600000" data-prefix="" data-suffix=" ₫" data-decimals="0">0 ₫</div>
+        <div class="kpi-footer">
+          <span class="kpi-trend up">▲ 18.4%</span>
+          <span class="kpi-compare">so với Q2</span>
+        </div>
+      </div>
+
+      <div class="glass-card kpi-card green">
+        <div class="kpi-header">
+          <span class="kpi-label">Khách hàng mới</span>
+          <div class="kpi-icon">👥</div>
+        </div>
+        <div class="kpi-value" id="kpi-customers" data-target="3284" data-suffix=" KH" data-decimals="0">0 KH</div>
+        <div class="kpi-footer">
+          <span class="kpi-trend up">▲ 24.7%</span>
+          <span class="kpi-compare">so với Q2</span>
+        </div>
+      </div>
+
+      <div class="glass-card kpi-card amber">
+        <div class="kpi-header">
+          <span class="kpi-label">Tỷ lệ chuyển đổi</span>
+          <div class="kpi-icon">🎯</div>
+        </div>
+        <div class="kpi-value" id="kpi-conv" data-target="68.2" data-suffix="%" data-decimals="1">0%</div>
+        <div class="kpi-footer">
+          <span class="kpi-trend down">▼ 2.1%</span>
+          <span class="kpi-compare">so với Q2</span>
+        </div>
+      </div>
+
+      <div class="glass-card kpi-card rose">
+        <div class="kpi-header">
+          <span class="kpi-label">Churn Rate</span>
+          <div class="kpi-icon">📉</div>
+        </div>
+        <div class="kpi-value" id="kpi-churn" data-target="3.8" data-suffix="%" data-decimals="1">0%</div>
+        <div class="kpi-footer">
+          <span class="kpi-trend up">▲ cải thiện 0.6%</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CHART ROW -->
+    <section class="chart-row">
+
+      <!-- Main: Revenue Line Chart -->
+      <div class="glass-card chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-title">Xu hướng Doanh thu theo tháng</div>
+            <div class="chart-subtitle">So sánh Q2 vs Q3 · Đơn vị: Triệu ₫</div>
+          </div>
+          <span class="chart-badge">Q3 2025</span>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="revenueChart" height="130"></canvas>
+        </div>
+      </div>
+
+      <!-- Secondary: Doughnut -->
+      <div class="glass-card chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-title">Phân bổ Sản phẩm</div>
+            <div class="chart-subtitle">Tỷ trọng theo doanh thu</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="productChart" height="220"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- BOTTOM ROW -->
+    <section class="bottom-row">
+
+      <!-- Top Sales Reps Table -->
+      <div class="glass-card chart-card">
+        <div class="section-header">
+          <div class="section-title">🏆 Top Nhân viên kinh doanh</div>
+          <div class="section-subtitle">Xếp hạng theo doanh thu Q3 · 2025</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Họ tên</th>
+              <th>Khu vực</th>
+              <th>Doanh thu</th>
+              <th class="bar-cell">Hiệu suất</th>
+            </tr>
+          </thead>
+          <tbody id="sales-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Channel Performance -->
+      <div class="glass-card chart-card">
+        <div class="section-header">
+          <div class="section-title">📡 Kênh bán hàng</div>
+          <div class="section-subtitle">Đóng góp theo kênh Q3 · 2025</div>
+        </div>
+        <div class="channel-list" id="channel-list"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ========================== FOOTER ========================== -->
+  <footer class="dashboard-footer">
+    <span id="last-updated">Đang tải...</span>
+    &nbsp;·&nbsp; Dashboard HTML v1.0 · Skill: dashboard-html
+  </footer>
+
+  <!-- ========================== SCRIPTS ========================== -->
+  <script>
+    /* ===== LIVE CLOCK ===== */
+    function updateClock() {
+      const now = new Date();
+      const timeEl = document.getElementById('live-clock');
+      const updEl  = document.getElementById('last-updated');
+      if (timeEl) timeEl.textContent = now.toLocaleTimeString('vi-VN', { hour12: false });
+      if (updEl)  updEl.textContent  = 'Cập nhật lúc: ' + now.toLocaleString('vi-VN');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* ===== COUNTER ANIMATION (easeOutExpo) ===== */
+    function animateCounter(el, target, duration, prefix, suffix, decimals) {
+      prefix   = prefix   || '';
+      suffix   = suffix   || '';
+      decimals = decimals || 0;
+      duration = duration || 2000;
+      const startTime = performance.now();
+
+      function fmt(n) {
+        return prefix + n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + suffix;
+      }
+      function step(now) {
+        const elapsed  = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased    = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        el.textContent = fmt(target * eased);
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ===== INTERSECTION OBSERVER → trigger counters ===== */
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        animateCounter(
+          el,
+          parseFloat(el.dataset.target),
+          2200,
+          el.dataset.prefix,
+          el.dataset.suffix,
+          parseInt(el.dataset.decimals || '0')
+        );
+        counterObserver.unobserve(el);
+      });
+    }, { threshold: 0.4 });
+
+    document.querySelectorAll('[data-target]').forEach(el => counterObserver.observe(el));
+
+    /* ===== CHART.JS GLOBAL DEFAULTS ===== */
+    Chart.defaults.color          = '#90a4c8';
+    Chart.defaults.borderColor    = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family    = "'Inter', 'Segoe UI', system-ui";
+    Chart.defaults.font.size      = 12;
+    Chart.defaults.plugins.legend.labels.boxWidth = 12;
+    Chart.defaults.plugins.legend.labels.padding  = 16;
+
+    function gradient(ctx, colorTop, colorBottom) {
+      const g = ctx.createLinearGradient(0, 0, 0, 280);
+      g.addColorStop(0, colorTop);
+      g.addColorStop(1, colorBottom);
+      return g;
+    }
+
+    /* ===== REVENUE LINE CHART ===== */
+    (function() {
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      const labels = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                      'Tháng 7','Tháng 8','Tháng 9'];
+      const q2 = [320, 345, 380, 410, 395, 430, null, null, null];
+      const q3 = [null, null, null, null, null, null, 480, 520, 550];
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Q2 2025',
+              data: q2,
+              borderColor: 'rgba(99,102,241,0.6)',
+              backgroundColor: gradient(ctx, 'rgba(99,102,241,0.15)', 'rgba(99,102,241,0)'),
+              fill: true, tension: 0.4,
+              pointBackgroundColor: '#6366f1', pointRadius: 4, pointHoverRadius: 7,
+              borderDash: [6, 3],
+            },
+            {
+              label: 'Q3 2025',
+              data: q3,
+              borderColor: '#10b981',
+              backgroundColor: gradient(ctx, 'rgba(16,185,129,0.2)', 'rgba(16,185,129,0)'),
+              fill: true, tension: 0.4,
+              pointBackgroundColor: '#10b981', pointRadius: 5, pointHoverRadius: 8,
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', align: 'end' },
+            tooltip: {
+              backgroundColor: 'rgba(15,22,41,0.95)',
+              borderColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y + ' Tr ₫'
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { callback: v => v + ' Tr' }
+            }
+          }
+        }
+      });
+    })();
+
+    /* ===== PRODUCT DOUGHNUT ===== */
+    (function() {
+      const ctx = document.getElementById('productChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Phần mềm', 'Dịch vụ', 'Phần cứng', 'Đào tạo'],
+          datasets: [{
+            data: [42, 31, 18, 9],
+            backgroundColor: [
+              'rgba(99,102,241,0.85)',
+              'rgba(16,185,129,0.85)',
+              'rgba(245,158,11,0.85)',
+              'rgba(168,85,247,0.85)'
+            ],
+            borderColor: 'rgba(10,14,26,0.8)',
+            borderWidth: 3,
+            hoverOffset: 8,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 14 } },
+            tooltip: {
+              backgroundColor: 'rgba(15,22,41,0.95)',
+              borderColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.raw + '%' }
+            }
+          }
+        }
+      });
+    })();
+
+    /* ===== SALES TABLE ===== */
+    const salesData = [
+      { name: 'Nguyễn Minh Tuấn', region: 'Hà Nội',    revenue: 842, pct: 100 },
+      { name: 'Trần Thị Lan',     region: 'TP.HCM',    revenue: 768, pct: 91  },
+      { name: 'Lê Văn Hùng',      region: 'Đà Nẵng',   revenue: 654, pct: 78  },
+      { name: 'Phạm Thảo Vy',     region: 'Cần Thơ',   revenue: 521, pct: 62  },
+      { name: 'Hoàng Quốc Bảo',   region: 'Hải Phòng', revenue: 489, pct: 58  },
+    ];
+
+    const barColors = [
+      'linear-gradient(90deg,#f59e0b,#f59e0b88)',
+      'linear-gradient(90deg,#90a4c8,#90a4c888)',
+      'linear-gradient(90deg,#6366f1,#6366f188)',
+      'linear-gradient(90deg,#10b981,#10b98188)',
+      'linear-gradient(90deg,#a855f7,#a855f788)',
+    ];
+    const rankClasses = ['rank-1','rank-2','rank-3','rank-n','rank-n'];
+
+    const tbody = document.getElementById('sales-table-body');
+    salesData.forEach((r, i) => {
+      tbody.innerHTML += `
+        <tr>
+          <td><span class="rank-badge ${rankClasses[i]}">${i+1}</span></td>
+          <td style="color:var(--text-primary);font-weight:500">${r.name}</td>
+          <td>${r.region}</td>
+          <td style="color:var(--text-primary);font-weight:600">${r.revenue} Tr ₫</td>
+          <td class="bar-cell">
+            <div class="mini-bar-bg">
+              <div class="mini-bar" style="width:${r.pct}%;background:${barColors[i]}"></div>
+            </div>
+          </td>
+        </tr>`;
+    });
+
+    /* ===== CHANNEL LIST ===== */
+    const channels = [
+      { name: 'Direct Sales',      pct: 38, color: '#6366f1' },
+      { name: 'Online / E-com',    pct: 27, color: '#10b981' },
+      { name: 'Partner / Reseller',pct: 21, color: '#f59e0b' },
+      { name: 'Telemarketing',     pct: 9,  color: '#06b6d4' },
+      { name: 'Referral',          pct: 5,  color: '#a855f7' },
+    ];
+
+    const chEl = document.getElementById('channel-list');
+    channels.forEach(ch => {
+      chEl.innerHTML += `
+        <div class="channel-item">
+          <span class="channel-dot" style="background:${ch.color}"></span>
+          <span class="channel-name">${ch.name}</span>
+          <div class="channel-bar-wrap">
+            <div class="channel-bar-bg">
+              <div class="channel-bar" style="width:${ch.pct}%;background:${ch.color}"></div>
+            </div>
+          </div>
+          <span class="channel-pct" style="color:${ch.color}">${ch.pct}%</span>
+        </div>`;
+    });
+  </script>
+</body>
+</html>

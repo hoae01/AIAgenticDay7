@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alpha Company | Dashboard Kinh Doanh 2026</title>
+  <meta name="description" content="Dashboard báo cáo hiệu suất kinh doanh Công ty TNHH Alpha — dữ liệu thời gian thực, Glassmorphism Dark Mode." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ============================================
+       CSS VARIABLES — Brand Alpha Design Tokens
+    ============================================ */
+    :root {
+      --bg-base:      #060c1a;
+      --bg-surface:   #0b1225;
+      --bg-glass:     rgba(255, 255, 255, 0.045);
+      --border-glass: rgba(255, 255, 255, 0.10);
+      --border-hover: rgba(255, 255, 255, 0.22);
+      --text-primary:   #e8edf6;
+      --text-secondary: #8ea4c8;
+      --text-muted:     #4d6480;
+      /* Alpha Brand Colors */
+      --alpha-navy:   #1E3A8A;
+      --alpha-gold:   #F59E0B;
+      --alpha-red:    #EF4444;
+      --alpha-green:  #10B981;
+      --radius-card: 18px;
+      --shadow-card:  0 8px 32px rgba(0, 0, 0, 0.4);
+      --shadow-hover: 0 20px 64px rgba(0, 0, 0, 0.6);
+      --transition:   0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(ellipse at 10% 50%, rgba(30, 58, 138, 0.25) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+        radial-gradient(ellipse at 60% 90%, rgba(245, 158, 11, 0.08) 0%, transparent 40%);
+      min-height: 100vh;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+    /* HEADER */
+    .dashboard-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(6, 12, 26, 0.85);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid var(--border-glass);
+      padding: 0 28px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .brand-logo {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--alpha-navy) 0%, #2563eb 100%);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #fff;
+      box-shadow: 0 0 20px rgba(30, 58, 138, 0.5);
+    }
+
+    .brand-name {
+      font-size: 18px; font-weight: 700;
+      background: linear-gradient(135deg, #e8edf6 0%, #93b4dc 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .brand-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 20px; }
+
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 999px; font-size: 11px; font-weight: 700;
+      color: var(--alpha-green); letter-spacing: 0.8px; text-transform: uppercase;
+    }
+
+    .pulse-dot {
+      width: 6px; height: 6px; background: var(--alpha-green);
+      border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.6); }
+    }
+
+    .clock-display {
+      font-size: 14px; font-weight: 600; color: var(--text-secondary);
+      font-variant-numeric: tabular-nums; letter-spacing: 0.5px;
+    }
+
+    /* DASHBOARD GRID */
+    .dashboard-grid {
+      display: grid; gap: 22px; padding: 26px 28px;
+      max-width: 1680px; margin: 0 auto;
+    }
+
+    /* GLASS CARD */
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--border-hover);
+    }
+
+    /* KPI ROW */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .kpi-card {
+      position: relative; padding: 24px 22px; overflow: hidden; cursor: default;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, var(--kpi-accent), transparent 70%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude; -webkit-mask-composite: xor;
+    }
+
+    .kpi-card::after {
+      content: ''; position: absolute; top: -40%; right: -20%;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, var(--kpi-accent) 0%, transparent 70%);
+      opacity: 0.08; pointer-events: none;
+    }
+
+    .kpi-card--navy  { --kpi-accent: var(--alpha-navy);  }
+    .kpi-card--red   { --kpi-accent: var(--alpha-red);   }
+    .kpi-card--green { --kpi-accent: var(--alpha-green); }
+    .kpi-card--gold  { --kpi-accent: var(--alpha-gold);  }
+
+    .kpi-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 16px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .kpi-card--navy  .kpi-icon { background: rgba(30,58,138,0.2); border-color: rgba(30,58,138,0.4); }
+    .kpi-card--red   .kpi-icon { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); }
+    .kpi-card--green .kpi-icon { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); }
+    .kpi-card--gold  .kpi-icon { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); }
+
+    .kpi-label {
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 26px; font-weight: 800; color: var(--text-primary);
+      line-height: 1; letter-spacing: -0.5px; display: block;
+      margin-bottom: 10px; min-height: 32px; font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-trend {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+    }
+
+    .kpi-trend--up   { background: rgba(16,185,129,0.12); color: var(--alpha-green); }
+    .kpi-trend--down { background: rgba(239,68,68,0.12);  color: var(--alpha-red); }
+    .kpi-trend--neu  { background: rgba(245,158,11,0.12); color: var(--alpha-gold); }
+
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+
+    /* CHART ROWS */
+    .chart-row   { display: grid; grid-template-columns: 2fr 1fr; gap: 22px; }
+    .chart-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+
+    .chart-card { padding: 22px 24px; }
+
+    .section-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .section-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+
+    .chart-container { position: relative; }
+
+    /* TABLE */
+    .data-section { padding: 24px; }
+
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+    }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    .data-table thead th {
+      text-align: left; padding: 10px 14px;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.7px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .data-table tbody tr { transition: background var(--transition); }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+    .data-table tbody td {
+      padding: 13px 14px; color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle;
+    }
+
+    .data-table tbody td:first-child { color: var(--text-primary); font-weight: 600; }
+
+    .rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      font-size: 11px; font-weight: 800; margin-right: 8px;
+    }
+
+    .rank-1 { background: rgba(245,158,11,0.25); color: #F59E0B; }
+    .rank-2 { background: rgba(148,163,184,0.2); color: #94a3b8; }
+    .rank-3 { background: rgba(180,120,60,0.2);  color: #cd7f32; }
+    .rank-other { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+    .bar-mini { display: flex; align-items: center; gap: 8px; }
+
+    .bar-track {
+      flex: 1; height: 5px; background: rgba(255,255,255,0.06);
+      border-radius: 99px; overflow: hidden; min-width: 80px;
+    }
+
+    .bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #1E3A8A, #3B82F6);
+      transition: width 1s ease;
+    }
+
+    /* POLL STATUS */
+    .poll-status { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+    .poll-status strong { color: var(--alpha-green); }
+
+    .progress-ring { display: inline-block; width: 14px; height: 14px; }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring circle { fill: none; stroke: rgba(16,185,129,0.25); stroke-width: 2; }
+    .progress-ring .ring-fill {
+      stroke: var(--alpha-green); stroke-dasharray: 34;
+      stroke-dashoffset: 34; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear;
+    }
+
+    /* FOOTER */
+    .dashboard-footer {
+      text-align: center; padding: 16px 28px;
+      font-size: 11px; color: var(--text-muted);
+      border-top: 1px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-card { animation: fadeInUp 0.5s ease both; }
+    .kpi-row .glass-card:nth-child(1) { animation-delay: 0.05s; }
+    .kpi-row .glass-card:nth-child(2) { animation-delay: 0.10s; }
+    .kpi-row .glass-card:nth-child(3) { animation-delay: 0.15s; }
+    .kpi-row .glass-card:nth-child(4) { animation-delay: 0.20s; }
+
+    @keyframes flashUpdate {
+      0%   { box-shadow: var(--shadow-card); }
+      30%  { box-shadow: 0 0 0 2px rgba(16,185,129,0.5), var(--shadow-card); }
+      100% { box-shadow: var(--shadow-card); }
+    }
+
+    .updated { animation: flashUpdate 0.8s ease; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1200px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .chart-row { grid-template-columns: 1fr; }
+      .chart-row-2 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .dashboard-grid { padding: 12px 14px; gap: 14px; }
+      .dashboard-header { padding: 0 14px; }
+      .kpi-value { font-size: 20px; }
+      .brand-sub { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <div class="brand-logo">&#945;</div>
+      <div>
+        <div class="brand-name">C&#244;ng Ty TNHH Alpha</div>
+        <div class="brand-sub">Dashboard Kinh Doanh &middot; N&#259;m 2026</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="pulse-dot"></div>
+        LIVE
+      </div>
+      <div class="clock-display" id="live-clock">00:00:00</div>
+    </div>
+  </header>
+
+  <main class="dashboard-grid">
+
+    <!-- KPI ROW -->
+    <section class="kpi-row" aria-label="Ch&#7881; s&#7889; kinh doanh ch&#237;nh" id="kpi-section">
+
+      <!-- KPI 1: Doanh thu -->
+      <div class="glass-card kpi-card kpi-card--navy" id="kpi-doanhthu">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Tổng Doanh Thu</div>
+        <span class="kpi-value" id="val-doanhthu" data-target="320535" data-prefix="₫" data-suffix=" Tr" data-decimals="0">₫0 Tr</span>
+        <div>
+          <span class="kpi-trend kpi-trend--up">▲ +12.5%</span>
+          <span class="kpi-sub">so kỳ trước</span>
+        </div>
+      </div>
+
+      <!-- KPI 2: Chi phí -->
+      <div class="glass-card kpi-card kpi-card--red" id="kpi-chiphi">
+        <div class="kpi-icon">📉</div>
+        <div class="kpi-label">Tổng Chi Phí</div>
+        <span class="kpi-value" id="val-chiphi" data-target="163821" data-prefix="₫" data-suffix=" Tr" data-decimals="0">₫0 Tr</span>
+        <div>
+          <span class="kpi-trend kpi-trend--down">▼ +8.3%</span>
+          <span class="kpi-sub">so kỳ trước</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: Lợi nhuận -->
+      <div class="glass-card kpi-card kpi-card--green" id="kpi-loinhuan">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Lợi Nhuận Gộp</div>
+        <span class="kpi-value" id="val-loinhuan" data-target="132412" data-prefix="₫" data-suffix=" Tr" data-decimals="0">₫0 Tr</span>
+        <div>
+          <span class="kpi-trend kpi-trend--up">▲ +18.7%</span>
+          <span class="kpi-sub">biên 41.3%</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: Đơn hàng -->
+      <div class="glass-card kpi-card kpi-card--gold" id="kpi-donhang">
+        <div class="kpi-icon">🛒</div>
+        <div class="kpi-label">Tổng Đơn Hàng</div>
+        <span class="kpi-value" id="val-donhang" data-target="500" data-suffix=" ĐH" data-decimals="0">0 ĐH</span>
+        <div>
+          <span class="kpi-trend kpi-trend--up">▲ +5.2%</span>
+          <span class="kpi-sub">TB ₫641 Tr/đơn</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CHART ROW 1 -->
+    <section class="chart-row">
+      <div class="glass-card chart-card">
+        <div class="section-title">Doanh Thu &amp; Chi Ph&#237; Theo Th&#225;ng</div>
+        <div class="section-sub">&#272;&#417;n v&#7883;: Tri&#7879;u VN&#272; &middot; N&#259;m 2026</div>
+        <div class="chart-container" style="height:280px;"><canvas id="barChart"></canvas></div>
+      </div>
+      <div class="glass-card chart-card">
+        <div class="section-title">C&#417; C&#7845;u Doanh Thu</div>
+        <div class="section-sub">Theo danh m&#7909;c s&#7843;n ph&#7849;m</div>
+        <div class="chart-container" style="height:280px;"><canvas id="doughnutChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- CHART ROW 2 -->
+    <section class="chart-row-2">
+      <div class="glass-card chart-card">
+        <div class="section-title">Xu H&#432;&#7899;ng L&#7907;i Nhu&#7853;n</div>
+        <div class="section-sub">L&#7907;i nhu&#7853;n g&#7897;p t&#7915;ng th&#225;ng &middot; 2026</div>
+        <div class="chart-container" style="height:220px;"><canvas id="lineChart"></canvas></div>
+      </div>
+      <div class="glass-card chart-card">
+        <div class="section-title">Doanh Thu Theo Khu V&#7921;c</div>
+        <div class="section-sub">Mi&#7873;n B&#7855;c &middot; Mi&#7873;n Trung &middot; Mi&#7873;n Nam</div>
+        <div class="chart-container" style="height:220px;"><canvas id="regionChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="glass-card data-section">
+      <div class="table-header">
+        <div>
+          <div class="section-title">&#127942; Top Danh M&#7909;c S&#7843;n Ph&#7849;m</div>
+          <div class="section-sub">X&#7871;p h&#7841;ng theo doanh thu &middot; T&#7845;t c&#7843; khu v&#7921;c</div>
+        </div>
+        <div class="poll-status">
+          <span class="progress-ring">
+            <svg width="14" height="14" viewBox="0 0 14 14">
+              <circle cx="7" cy="7" r="5.4"></circle>
+              <circle class="ring-fill" id="ring-fill" cx="7" cy="7" r="5.4"></circle>
+            </svg>
+          </span>
+          L&#224;m m&#7899;i sau <strong id="countdown">2</strong>s
+        </div>
+      </div>
+      <table class="data-table" id="top-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Danh M&#7909;c</th>
+            <th>Doanh Thu</th>
+            <th>Chi Ph&#237;</th>
+            <th>L&#7907;i Nhu&#7853;n</th>
+            <th>Bi&#234;n LN</th>
+            <th>T&#7881; tr&#7885;ng</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <footer class="dashboard-footer">
+    <span>&copy; 2026 C&#244;ng Ty TNHH Alpha &middot; H&#7879; th&#7889;ng b&#225;o c&#225;o n&#7897;i b&#7897;</span>
+    <span id="last-updated">&#272;ang t&#7843;i d&#7919; li&#7879;u...</span>
+    <span>Port: 9090 &middot; Polling: 2s</span>
+  </footer>
+
+  <script>
+    'use strict';
+
+    const API_BASE = 'http://localhost:9090';
+    const POLL_MS  = 2000;
+
+    // Brand colors per guideline
+    const C_NAVY  = '#1E3A8A';
+    const C_RED   = '#EF4444';
+    const C_GREEN = '#10B981';
+    const C_GOLD  = '#F59E0B';
+
+    Chart.defaults.color = '#8ea4c8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'Inter','Segoe UI',system-ui";
+
+    // Live clock
+    function updateClock() {
+      const el = document.getElementById('live-clock');
+      if (el) el.textContent = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Counter animation
+    function animateCounter(el, target, duration, prefix, suffix, decimals) {
+      const from = parseFloat(el.dataset.current || '0');
+      el.dataset.current = target;
+      const t0 = performance.now();
+      (function tick(ts) {
+        const p = Math.min((ts - t0) / duration, 1);
+        const e = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+        const v = from + (target - from) * e;
+        el.textContent = prefix + v.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+    }
+
+    // Gradient helper
+    function grad(ctx, color, a1, a2) {
+      const g = ctx.createLinearGradient(0, 0, 0, 300);
+      const hex = n => Math.round(n*255).toString(16).padStart(2,'0');
+      g.addColorStop(0, color + hex(a1));
+      g.addColorStop(1, color + hex(a2));
+      return g;
+    }
+
+    // Initial data (fallback when server not yet ready)
+    let D = {
+      kpi: { doanh_thu: 320535, chi_phi: 163821, loi_nhuan: 132412, don_hang: 500 },
+      monthly: {
+        labels:    ['T1','T2','T3','T4','T5','T6'],
+        doanh_thu: [58235,37355,48904,48525,68375,59140],
+        chi_phi:   [30185,18486,25374,25055,35357,29362],
+        loi_nhuan: [23958,16127,19662,19776,27853,25036],
+      },
+      categories: {
+        labels:  ['Thực Phẩm','Thời Trang','Điện Tử','Gia Dụng'],
+        revenue: [92492,78994,78146,70904],
+        cost:    [47200,39800,40100,36700],
+        profit:  [45292,39194,38046,34204],
+      },
+      regions: {
+        labels:  ['Miền Nam','Miền Trung','Miền Bắc'],
+        revenue: [107766,114948,97821],
+      },
+    };
+
+    let barChart, doughnutChart, lineChart, regionChart;
+
+    function initCharts() {
+      // Bar: DT vs CP
+      barChart = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+          labels: D.monthly.labels,
+          datasets: [
+            {
+              label: 'Doanh Thu',
+              data: D.monthly.doanh_thu,
+              backgroundColor: C_NAVY + 'bb',
+              borderColor: C_NAVY,
+              borderWidth: 1, borderRadius: 6, borderSkipped: false,
+            },
+            {
+              label: 'Chi Phí',
+              data: D.monthly.chi_phi,
+              backgroundColor: C_RED + '99',
+              borderColor: C_RED,
+              borderWidth: 1, borderRadius: 6, borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#8ea4c8', font: { size: 12, weight: '600' }, boxWidth: 12, padding: 16 } },
+            tooltip: {
+              backgroundColor: 'rgba(11,18,37,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 12,
+              callbacks: { label: c => `  ${c.dataset.label}: \u20AB${c.parsed.y.toLocaleString('vi-VN')} Tr` },
+            },
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8ea4c8', font: { size: 12 } } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#8ea4c8', font: { size: 11 }, callback: v => '\u20AB' + (v/1000).toFixed(0) + 'B' },
+            },
+          },
+        },
+      });
+
+      // Doughnut: category split
+      doughnutChart = new Chart(document.getElementById('doughnutChart'), {
+        type: 'doughnut',
+        data: {
+          labels: D.categories.labels,
+          datasets: [{
+            data: D.categories.revenue,
+            backgroundColor: [C_NAVY+'cc', C_GOLD+'cc', C_GREEN+'cc', '#6366f1cc'],
+            borderColor:     [C_NAVY,       C_GOLD,      C_GREEN,      '#6366f1'],
+            borderWidth: 2, hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '68%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#8ea4c8', font: { size: 11, weight: '600' }, boxWidth: 10, padding: 12 } },
+            tooltip: {
+              backgroundColor: 'rgba(11,18,37,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 12,
+              callbacks: { label: c => `  ${c.label}: \u20AB${c.parsed.toLocaleString('vi-VN')} Tr` },
+            },
+          },
+        },
+      });
+
+      // Line: profit trend
+      const lCtx = document.getElementById('lineChart').getContext('2d');
+      lineChart = new Chart(lCtx, {
+        type: 'line',
+        data: {
+          labels: D.monthly.labels,
+          datasets: [{
+            label: 'Lợi Nhuận',
+            data: D.monthly.loi_nhuan,
+            borderColor: C_GREEN, backgroundColor: grad(lCtx, C_GREEN, 0.35, 0.0),
+            borderWidth: 2.5, fill: true, tension: 0.4,
+            pointBackgroundColor: C_GREEN, pointRadius: 4, pointHoverRadius: 7,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(11,18,37,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 12,
+              callbacks: { label: c => `  Lợi nhuận: \u20AB${c.parsed.y.toLocaleString('vi-VN')} Tr` },
+            },
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8ea4c8', font: { size: 11 } } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#8ea4c8', font: { size: 10 }, callback: v => '\u20AB' + (v/1000).toFixed(0) + 'B' },
+            },
+          },
+        },
+      });
+
+      // Horizontal bar: region
+      regionChart = new Chart(document.getElementById('regionChart'), {
+        type: 'bar',
+        data: {
+          labels: D.regions.labels,
+          datasets: [{
+            label: 'Doanh Thu',
+            data: D.regions.revenue,
+            backgroundColor: [C_NAVY+'cc', C_GOLD+'cc', C_GREEN+'cc'],
+            borderColor:     [C_NAVY,       C_GOLD,      C_GREEN],
+            borderWidth: 1.5, borderRadius: 6, borderSkipped: false,
+          }],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(11,18,37,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 12,
+              callbacks: { label: c => `  \u20AB${c.parsed.x.toLocaleString('vi-VN')} Tr` },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#8ea4c8', font: { size: 10 }, callback: v => '\u20AB' + (v/1000).toFixed(0) + 'B' },
+            },
+            y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#8ea4c8', font: { size: 12, weight: '600' } } },
+          },
+        },
+      });
+    }
+
+    function renderTable(cats) {
+      const total = cats.revenue.reduce((a,b) => a+b, 0);
+      const maxR  = Math.max(...cats.revenue);
+      const ranks = ['rank-1','rank-2','rank-3','rank-other'];
+      let html = '';
+      cats.labels.forEach((name, i) => {
+        const rev    = cats.revenue[i];
+        const cost   = cats.cost[i];
+        const profit = cats.profit[i];
+        const margin = (profit / rev * 100).toFixed(1);
+        const share  = (rev / total * 100).toFixed(1);
+        const barPct = (rev / maxR * 100).toFixed(1);
+        const mc     = profit/rev > 0.45 ? C_GREEN : profit/rev > 0.38 ? C_GOLD : C_RED;
+        html += `<tr>
+          <td><span class="rank-badge ${ranks[Math.min(i,3)]}">${i+1}</span></td>
+          <td>${name}</td>
+          <td style="color:var(--text-primary);font-weight:700;">\u20AB${Math.round(rev).toLocaleString('vi-VN')} Tr</td>
+          <td style="color:#EF4444;">\u20AB${Math.round(cost).toLocaleString('vi-VN')} Tr</td>
+          <td style="color:#10B981;">\u20AB${Math.round(profit).toLocaleString('vi-VN')} Tr</td>
+          <td style="color:${mc};font-weight:700;">${margin}%</td>
+          <td><div class="bar-mini"><div class="bar-track"><div class="bar-fill" style="width:${barPct}%;"></div></div><span style="font-size:11px;color:var(--text-muted);min-width:32px;">${share}%</span></div></td>
+        </tr>`;
+      });
+      document.getElementById('table-body').innerHTML = html;
+    }
+
+    function updateKPIs(data) {
+      const vals = [
+        { id: 'val-doanhthu', v: data.kpi.doanh_thu, pre: '\u20AB', suf: ' Tr', dec: 0 },
+        { id: 'val-chiphi',   v: data.kpi.chi_phi,   pre: '\u20AB', suf: ' Tr', dec: 0 },
+        { id: 'val-loinhuan', v: data.kpi.loi_nhuan,  pre: '\u20AB', suf: ' Tr', dec: 0 },
+        { id: 'val-donhang',  v: data.kpi.don_hang,   pre: '',       suf: ' \u0110H', dec: 0 },
+      ];
+      vals.forEach(({ id, v, pre, suf, dec }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        animateCounter(el, v, 1200, pre, suf, dec);
+        const card = el.closest('.glass-card');
+        if (card) { card.classList.remove('updated'); void card.offsetWidth; card.classList.add('updated'); }
+      });
+    }
+
+    function updateCharts(data) {
+      barChart.data.datasets[0].data = data.monthly.doanh_thu;
+      barChart.data.datasets[1].data = data.monthly.chi_phi;
+      barChart.update('active');
+      doughnutChart.data.datasets[0].data = data.categories.revenue;
+      doughnutChart.update('active');
+      lineChart.data.datasets[0].data = data.monthly.loi_nhuan;
+      lineChart.update('active');
+      regionChart.data.datasets[0].data = data.regions.revenue;
+      regionChart.update('active');
+    }
+
+    // Countdown ring
+    const RING_MAX = 34;
+    let cdVal = POLL_MS / 1000;
+    const ringEl = document.getElementById('ring-fill');
+    const cdEl   = document.getElementById('countdown');
+
+    setInterval(() => {
+      cdVal = Math.max(0, cdVal - 0.1);
+      if (ringEl) ringEl.style.strokeDashoffset = (RING_MAX * (cdVal / (POLL_MS / 1000))).toFixed(2);
+      if (cdEl)   cdEl.textContent = Math.ceil(cdVal);
+      if (cdVal <= 0) cdVal = POLL_MS / 1000;
+    }, 100);
+
+    // Polling
+    async function fetchData() {
+      try {
+        const resp = await fetch(API_BASE + '/data', { signal: AbortSignal.timeout(4000) });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        D = data;
+        updateKPIs(data);
+        updateCharts(data);
+        renderTable(data.categories);
+        const lu = document.getElementById('last-updated');
+        if (lu) lu.textContent = 'Cập nhật: ' + new Date().toLocaleString('vi-VN');
+      } catch (e) {
+        console.warn('[Alpha] Poll error:', e.message);
+      }
+    }
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', () => {
+      // Init counters
+      document.querySelectorAll('[data-target]').forEach(el => {
+        animateCounter(el, parseFloat(el.dataset.target||0), 2000,
+          el.dataset.prefix||'', el.dataset.suffix||'', parseInt(el.dataset.decimals||0));
+      });
+      initCharts();
+      renderTable(D.categories);
+      const lu = document.getElementById('last-updated');
+      if (lu) lu.textContent = 'Cập nhật: ' + new Date().toLocaleString('vi-VN');
+      setTimeout(() => { fetchData(); setInterval(fetchData, POLL_MS); }, 600);
+    });
+  </script>
+</body>
+</html>

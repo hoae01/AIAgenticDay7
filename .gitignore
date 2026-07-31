@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.bin
+downloaded_drive_file.bin
+scratch/
+*.json
+*.pdf
+*.xlsx
+*.docx
+
