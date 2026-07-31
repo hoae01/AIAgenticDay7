@@ -360,6 +360,7 @@ with col_action1:
         status_text = st.empty()
         
         total_rows = len(df)
+        auto_approved_count = 0
         for idx in range(total_rows):
             desc = str(df.at[idx, 'Mô tả chi tiết'])
             res = score_single_lead(desc)
@@ -367,12 +368,17 @@ with col_action1:
             df.at[idx, 'Phân loại'] = res['category']
             df.at[idx, 'Lý do AI'] = res['reasons']
             
+            # Tự động duyệt khách hàng có điểm AI >= 100
+            if res['score'] >= 100:
+                df.at[idx, 'Duyệt'] = 'Đã duyệt'
+                auto_approved_count += 1
+            
             if (idx + 1) % 50 == 0 or idx == total_rows - 1:
                 progress_bar.progress((idx + 1) / total_rows)
                 status_text.text(f"Đã xử lý {idx + 1}/{total_rows} leads...")
                 
         st.session_state.leads_df = df
-        status_text.success("✅ Đã hoàn tất chấm điểm toàn bộ Lead!")
+        status_text.success(f"✅ Hoàn tất chấm điểm 500 leads! Đã tự động duyệt {auto_approved_count} lead VIP (Điểm >= 100).")
         st.rerun()
 
 with col_action2:
@@ -383,14 +389,21 @@ with col_action2:
         if len(unscored_indices) == 0:
             st.toast("Tất cả leads đều đã được chấm điểm!", icon="ℹ️")
         else:
+            auto_approved_count = 0
             for idx in unscored_indices:
                 desc = str(df.at[idx, 'Mô tả chi tiết'])
                 res = score_single_lead(desc)
                 df.at[idx, 'AI Scoring'] = res['score']
                 df.at[idx, 'Phân loại'] = res['category']
                 df.at[idx, 'Lý do AI'] = res['reasons']
+                
+                # Tự động duyệt khách hàng có điểm AI >= 100
+                if res['score'] >= 100:
+                    df.at[idx, 'Duyệt'] = 'Đã duyệt'
+                    auto_approved_count += 1
+                    
             st.session_state.leads_df = df
-            st.success(f"✅ Đã chấm điểm cho {len(unscored_indices)} leads mới!")
+            st.success(f"✅ Đã chấm điểm cho {len(unscored_indices)} leads mới! (Tự động duyệt {auto_approved_count} lead VIP)")
             st.rerun()
 
 with col_action3:
@@ -568,10 +581,16 @@ if not edited_df.equals(filtered_df[existing_columns]):
             idx = original_idx[0]
             df.at[idx, 'AI Scoring'] = row['AI Scoring']
             df.at[idx, 'Phân loại'] = row['Phân loại']
-            df.at[idx, 'Duyệt'] = row['Duyệt']
+            
+            # Tự động duyệt nếu điểm AI >= 100
+            if not pd.isna(row['AI Scoring']) and float(row['AI Scoring']) >= 100:
+                df.at[idx, 'Duyệt'] = 'Đã duyệt'
+            else:
+                df.at[idx, 'Duyệt'] = row['Duyệt']
+                
             df.at[idx, 'Ghi chú Sales'] = row['Ghi chú Sales']
     st.session_state.leads_df = df
-    st.toast("✅ Đã lưu chỉnh sửa!", icon="💾")
+    st.toast("✅ Đã lưu chỉnh sửa & tự động cập nhật trạng thái duyệt!", icon="💾")
 
 # ---------------------------------------------------------
 # Footer & Help Instructions

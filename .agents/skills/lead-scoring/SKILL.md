@@ -60,12 +60,18 @@ AI phát hiện các dấu hiệu:
 
 ---
 
-## 4. HƯỚNG DẪN XỬ LÝ TRONG ỨNG DỤNG STREAMLIT (`app_lead_scoring.py`)
+## 4. QUY TẮC TỰ ĐỘNG DUYỆT (AUTO APPROVAL RULE)
+- Các lead có tổng điểm AI **>= 100** (Khách VIP đạt từ 2 tiêu chí cộng trở lên) sẽ được hệ thống **TỰ ĐỘNG CHUYỂN TRẠNG THÁI SANG "ĐÃ DUYỆT"** ngay lập tức mà không cần chờ duyệt thủ công.
+
+---
+
+## 5. HƯỚNG DẪN XỬ LÝ TRONG ỨNG DỤNG STREAMLIT (`app_lead_scoring.py`)
 
 1. **Đọc dữ liệu**: Sử dụng pandas đọc từ link export CSV Google Sheet.
 2. **Đọc Knowledge**: Nạp nội dung từ `knowledge-base/tieu_chi_cham_diem.txt` làm quy tắc gốc.
 3. **AI Agent Logic**: Duyệt từng dòng lead, phân tích văn bản trong `nhu_cau_mo_ta`, tính điểm tổng, liệt kê các lý do (+50 vì sao, -50 vì sao).
-4. **Hiển thị & Tương tác**: 
+4. **Tự động duyệt**: Nếu `AI Scoring` >= 100 ➔ Tự động gắn trạng thái `Duyệt` = `"Đã duyệt"`.
+5. **Hiển thị & Tương tác**: 
    - Đưa dữ liệu vào `st.data_editor`.
    - Cung cấp các cột: `AI Scoring` (Điểm), `Phân loại`, `Lý do AI`, `Duyệt` (`Chờ duyệt`, `Đã duyệt`, `Từ chối`), `Ghi chú Sales`.
    - Cho phép Sales/Manager xem, lọc theo trạng thái duyệt, chỉnh sửa trực tiếp và xuất file Excel/CSV.

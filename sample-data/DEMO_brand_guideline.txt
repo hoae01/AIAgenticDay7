@@ -1,0 +1,18 @@
+BRAND GUIDELINE - CÔNG TY TNHH ALPHA
+
+1. Màu sắc chủ đạo (Primary Colors):
+- Xanh Navy (Đại diện cho sự chuyên nghiệp): Hex #1E3A8A
+- Vàng Gold (Đại diện cho sự thịnh vượng): Hex #F59E0B
+
+2. Màu sắc phụ trợ (Secondary Colors):
+- Đỏ san hô (Dùng cho cảnh báo/chi phí): Hex #EF4444
+- Xanh lá mạ (Dùng cho tăng trưởng/lợi nhuận): Hex #10B981
+
+3. Font chữ mặc định:
+- Dùng font "Inter", "Roboto" hoặc "Arial" cho toàn bộ báo cáo, văn bản và biểu đồ.
+- Nền trang/Nền biểu đồ: Nên dùng màu sáng dịu như Xám nhạt (#F3F4F6) hoặc Trắng.
+
+4. Quy định hiển thị (Bắt buộc):
+- Mọi biểu đồ báo cáo kinh doanh BẮT BUỘC phải dùng Xanh Navy (#1E3A8A) để thể hiện Doanh thu.
+- BẮT BUỘC dùng Đỏ san hô (#EF4444) để thể hiện Chi phí.
+- Tuyệt đối không tự ý phối các màu sắc sặc sỡ khác ngoài bảng màu này để giữ độ nhận diện thương hiệu.
