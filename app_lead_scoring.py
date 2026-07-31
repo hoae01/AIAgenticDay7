@@ -312,13 +312,34 @@ def generate_sample_fallback_leads():
 def load_data_from_private_sheet(source_url):
     """Nạp dữ liệu từ Google Sheet Riêng Tư (Private) bằng Service Account Token trong st.secrets"""
     try:
+        creds_dict = None
+        # Trường hợp 1: Có section [gcp_service_account]
         if "gcp_service_account" in st.secrets:
+            creds_dict = dict(st.secrets["gcp_service_account"])
+        # Trường hợp 2: Các key nằm ở top-level của st.secrets (không có header [gcp_service_account])
+        elif "private_key" in st.secrets and "client_email" in st.secrets:
+            creds_dict = {
+                "type": st.secrets.get("type", "service_account"),
+                "project_id": st.secrets.get("project_id", ""),
+                "private_key_id": st.secrets.get("private_key_id", ""),
+                "private_key": st.secrets.get("private_key", ""),
+                "client_email": st.secrets.get("client_email", ""),
+                "client_id": st.secrets.get("client_id", ""),
+                "auth_uri": st.secrets.get("auth_uri", "https://accounts.google.com/o/oauth2/auth"),
+                "token_uri": st.secrets.get("token_uri", "https://oauth2.googleapis.com/token"),
+                "auth_provider_x509_cert_url": st.secrets.get("auth_provider_x509_cert_url", ""),
+                "client_x509_cert_url": st.secrets.get("client_x509_cert_url", ""),
+                "universe_domain": st.secrets.get("universe_domain", "googleapis.com")
+            }
+
+        if creds_dict and "private_key" in creds_dict:
             from google.oauth2 import service_account
             from google.auth.transport.requests import Request
 
-            creds_dict = dict(st.secrets["gcp_service_account"])
-            if "private_key" in creds_dict:
-                creds_dict["private_key"] = str(creds_dict["private_key"]).replace("\\n", "\n")
+            pk = str(creds_dict["private_key"])
+            if "\\n" in pk:
+                pk = pk.replace("\\n", "\n")
+            creds_dict["private_key"] = pk
 
             scopes = [
                 'https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -332,24 +353,23 @@ def load_data_from_private_sheet(source_url):
             }
             res = requests.get(source_url, headers=headers, timeout=12)
             if res.status_code == 200:
+                st.sidebar.success("🔐 Đã xác thực Service Account & nạp dữ liệu Private thành công!")
                 return pd.read_csv(io.StringIO(res.text))
+            else:
+                st.sidebar.warning(f"⚠️ Service Account nhận HTTP {res.status_code}. Hãy kiểm tra đã thêm email vào Google Sheet chưa.")
     except Exception as e:
-        pass
+        st.sidebar.warning(f"⚠️ Lỗi xác thực Service Account: {e}")
     return None
 
 def load_data(source_url):
     df = None
     
-    # 1. Thử xác thực Service Account từ st.secrets cho Private Google Sheet (bọc try-except an toàn)
-    has_gcp_secret = False
+    # 1. Thử xác thực Service Account từ st.secrets cho Private Google Sheet
     try:
-        if "gcp_service_account" in st.secrets:
-            has_gcp_secret = True
+        if "gcp_service_account" in st.secrets or "private_key" in st.secrets:
+            df = load_data_from_private_sheet(source_url)
     except Exception:
-        has_gcp_secret = False
-
-    if has_gcp_secret:
-        df = load_data_from_private_sheet(source_url)
+        pass
         
     # 2. Nếu chưa thành công, thử tải trực tiếp
     if df is None:
