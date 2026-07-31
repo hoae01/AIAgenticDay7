@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import re
 import io
+import requests
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -287,9 +288,51 @@ def score_single_lead(description: str) -> dict:
 # ---------------------------------------------------------
 DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1DyN6I3_5hVfMpszVom4enaKu2ZKxHInwf6RXrkTg1uo/export?format=csv&gid=1542775777"
 
+def generate_sample_fallback_leads():
+    """Tạo bộ dữ liệu 20 mẫu Lead BĐS thực tế làm dự phòng khi Google Sheets bị khóa quyền (401)"""
+    sample_data = [
+        {"ID": 1, "Họ và tên": "Phan Văn Hoa", "SĐT": "0901234567", "Mô tả chi tiết": "Đang tìm thuê mặt bằng kinh doanh spa tại Quận 1, diện tích khoảng 80-100m2. Giá thuê dưới 50 triệu/tháng."},
+        {"ID": 2, "Họ và tên": "Hồ Hồng Linh", "SĐT": "0912345678", "Mô tả chi tiết": "Khách hàng nhầm số, không có nhu cầu về bất động sản. Có vẻ là dữ liệu cũ từ ngành khác."},
+        {"ID": 3, "Họ và tên": "Lý Đức Cường", "SĐT": "0987654321", "Mô tả chi tiết": "Quan tâm căn hộ 2PN tại Quận 7 cho gia đình trẻ. Tài chính khoảng 4-5 tỷ, cần hỗ trợ vay ngân hàng 70%."},
+        {"ID": 4, "Họ và tên": "Lê Anh Lan", "SĐT": "0933445566", "Mô tả chi tiết": "Tìm mua Penthouse diện tích lớn, có hồ bơi riêng. Ngân sách không thành vấn đề, quan trọng đẳng cấp."},
+        {"ID": 5, "Họ và tên": "Ngô Anh Mai", "SĐT": "0977889900", "Mô tả chi tiết": "Tìm nhà phố liền kề nội thành, gần trường học bệnh viện. Ngân sách 8-10 tỷ. Cần tư vấn chiết khấu."},
+        {"ID": 6, "Họ và tên": "Đặng Hoàng Dũng", "SĐT": "0966554433", "Mô tả chi tiết": "Số điện thoại hay bị thuê bao, gọi nhiều lần không bắt máy. Nhắn tin Zalo không phản hồi."},
+        {"ID": 7, "Họ và tên": "Phạm Minh Lan", "SĐT": "0944332211", "Mô tả chi tiết": "Cần mua đất nền vùng ven (Long An, Đồng Nai) đầu tư dài hạn. Tài chính 2-3 tỷ. Yêu cầu sổ hồng riêng."},
+        {"ID": 8, "Họ và tên": "Trần Quốc Tuấn", "SĐT": "0922110099", "Mô tả chi tiết": "Mua Shophouse mặt đường lớn tại Phú Mỹ Hưng. Ngân sách 25 tỷ tài chính sẵn sàng, muốn gặp trực tiếp CĐT."},
+        {"ID": 9, "Họ và tên": "Bùi Thị Tuyết", "SĐT": "0911009988", "Mô tả chi tiết": "Hỏi giá cho vui, chưa có ý định mua trong năm nay. Đóng máy ngang khi tư vấn."},
+        {"ID": 10, "Họ và tên": "Vũ Văn Nam", "SĐT": "0900998877", "Mô tả chi tiết": "Gọi điện đến quảng cáo dịch vụ bảo hiểm và vay vốn ngân hàng. Không có nhu cầu mua BĐS."},
+        {"ID": 11, "Họ và tên": "Hoàng Minh Trí", "SĐT": "0988776655", "Mô tả chi tiết": "Chủ doanh nghiệp cần mua Quỹ đất công nghiệp 2-5 ha tại Bình Dương. Tài chính mạnh, pháp lý chuẩn 100%."},
+        {"ID": 12, "Họ và tên": "Nguyễn Thị Ngọc", "SĐT": "0977665544", "Mô tả chi tiết": "Tìm mua Biệt thự đơn lập tại Vinhomes Ocean Park. Yêu cầu căn góc ven sông, cần mua gấp trong tháng."},
+        {"ID": 13, "Họ và tên": "Đỗ Quang Liêm", "SĐT": "0966554422", "Mô tả chi tiết": "Tìm mua nhà mặt tiền Quận 1 giá 1,5 tỷ để ở. Không thương lượng thêm."},
+        {"ID": 14, "Họ và tên": "Trịnh Kim Chi", "SĐT": "0955443322", "Mô tả chi tiết": "Nhà đầu tư chuyên nghiệp mua sỉ 5 căn hộ cao cấp khu vực trung tâm. Cần gặp đàm phán chính sách sỉ."},
+        {"ID": 15, "Họ và tên": "Phùng Đức Thắng", "SĐT": "0944332200", "Mô tả chi tiết": "Thuê sàn văn phòng diện tích lớn 500m2 tại Quận 1. Ngân sách 200 triệu/tháng. Hợp đồng 5 năm."}
+    ]
+    return pd.DataFrame(sample_data)
+
 def load_data(source_url):
+    df = None
     try:
-        df = pd.read_csv(source_url)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+        res = requests.get(source_url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            df = pd.read_csv(io.StringIO(res.text))
+        elif res.status_code == 401 or res.status_code == 403:
+            st.warning("""
+            ⚠️ **Google Sheet đang ở chế độ Giới Hạn Truy Cập (Private/401 Unauthorized)**:
+            - **Cách khắc phục**: Mở file Google Sheet ➔ Bấm nút **Chia sẻ (Share)** ➔ Chọn **Bất kỳ ai có liên kết đều có thể xem (Anyone with the link can view)**.
+            - **Tạm thời**: Hệ thống đã tự động chuyển sang sử dụng **Bộ Dữ Liệu Mẫu (Sample Leads)** để bạn trải nghiệm đầy đủ tính năng!
+            """)
+            df = generate_sample_fallback_leads()
+        else:
+            df = pd.read_csv(source_url)
+    except Exception as e:
+        st.warning(f"⚠️ Không thể nạp từ Google Sheets ({e}). Đang nạp dữ liệu mẫu dự phòng...")
+        df = generate_sample_fallback_leads()
+
+    if df is not None:
         column_mapping = {
             'id': 'ID',
             'ten_khach': 'Họ và tên',
@@ -327,9 +370,7 @@ def load_data(source_url):
             df['Ghi chú Sales'] = ''
             
         return df
-    except Exception as e:
-        st.error(f"Lỗi khi nạp dữ liệu từ Google Sheets: {e}")
-        return None
+    return None
 
 # ---------------------------------------------------------
 # Sidebar Setup
