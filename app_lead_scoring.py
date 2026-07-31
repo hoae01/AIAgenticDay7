@@ -309,28 +309,65 @@ def generate_sample_fallback_leads():
     ]
     return pd.DataFrame(sample_data)
 
+def load_data_from_private_sheet(source_url):
+    """Nạp dữ liệu từ Google Sheet Riêng Tư (Private) bằng Service Account Token trong st.secrets"""
+    if "gcp_service_account" in st.secrets:
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport.requests import Request
+
+            creds_dict = dict(st.secrets["gcp_service_account"])
+            if "private_key" in creds_dict:
+                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
+            scopes = [
+                'https://www.googleapis.com/auth/spreadsheets.readonly',
+                'https://www.googleapis.com/auth/drive.readonly'
+            ]
+            credentials = service_account.Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            credentials.refresh(Request())
+            
+            headers = {
+                'Authorization': f'Bearer {credentials.token}'
+            }
+            res = requests.get(source_url, headers=headers, timeout=12)
+            if res.status_code == 200:
+                return pd.read_csv(io.StringIO(res.text))
+        except Exception as e:
+            pass
+    return None
+
 def load_data(source_url):
     df = None
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
-        res = requests.get(source_url, headers=headers, timeout=10)
-        if res.status_code == 200:
-            df = pd.read_csv(io.StringIO(res.text))
-        elif res.status_code == 401 or res.status_code == 403:
-            st.warning("""
-            ⚠️ **Google Sheet đang ở chế độ Giới Hạn Truy Cập (Private/401 Unauthorized)**:
-            - **Cách khắc phục**: Mở file Google Sheet ➔ Bấm nút **Chia sẻ (Share)** ➔ Chọn **Bất kỳ ai có liên kết đều có thể xem (Anyone with the link can view)**.
-            - **Tạm thời**: Hệ thống đã tự động chuyển sang sử dụng **Bộ Dữ Liệu Mẫu (Sample Leads)** để bạn trải nghiệm đầy đủ tính năng!
-            """)
+    
+    # 1. Thử xác thực Service Account từ st.secrets cho Private Google Sheet
+    if "gcp_service_account" in st.secrets:
+        df = load_data_from_private_sheet(source_url)
+        
+    # 2. Nếu chưa thành công, thử tải trực tiếp
+    if df is None:
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
+            res = requests.get(source_url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                df = pd.read_csv(io.StringIO(res.text))
+            elif res.status_code == 401 or res.status_code == 403:
+                st.warning("""
+                🔒 **Google Sheet đang ở chế độ Riêng Tư (Private/401 Unauthorized)**:
+                - **Để kết nối Google Sheet Riêng Tư này với Service Account**: 
+                  Mở Google Sheet ➔ Bấm **Chia sẻ (Share)** ➔ Thêm email Service Account làm Người xem (Viewer):
+                  `lead-scoring-robot@agenticday7.iam.gserviceaccount.com`
+                - **Tạm thời**: Hệ thống đang hiển thị **Bộ Dữ Liệu Mẫu** bên dưới!
+                """)
+                df = generate_sample_fallback_leads()
+            else:
+                df = pd.read_csv(source_url)
+        except Exception as e:
+            st.warning(f"⚠️ Không thể nạp từ Google Sheets ({e}). Đang nạp dữ liệu mẫu dự phòng...")
             df = generate_sample_fallback_leads()
-        else:
-            df = pd.read_csv(source_url)
-    except Exception as e:
-        st.warning(f"⚠️ Không thể nạp từ Google Sheets ({e}). Đang nạp dữ liệu mẫu dự phòng...")
-        df = generate_sample_fallback_leads()
 
     if df is not None:
         column_mapping = {
