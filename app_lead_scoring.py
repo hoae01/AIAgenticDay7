@@ -311,14 +311,14 @@ def generate_sample_fallback_leads():
 
 def load_data_from_private_sheet(source_url):
     """Nạp dữ liệu từ Google Sheet Riêng Tư (Private) bằng Service Account Token trong st.secrets"""
-    if "gcp_service_account" in st.secrets:
-        try:
+    try:
+        if "gcp_service_account" in st.secrets:
             from google.oauth2 import service_account
             from google.auth.transport.requests import Request
 
             creds_dict = dict(st.secrets["gcp_service_account"])
             if "private_key" in creds_dict:
-                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                creds_dict["private_key"] = str(creds_dict["private_key"]).replace("\\n", "\n")
 
             scopes = [
                 'https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -333,15 +333,22 @@ def load_data_from_private_sheet(source_url):
             res = requests.get(source_url, headers=headers, timeout=12)
             if res.status_code == 200:
                 return pd.read_csv(io.StringIO(res.text))
-        except Exception as e:
-            pass
+    except Exception as e:
+        pass
     return None
 
 def load_data(source_url):
     df = None
     
-    # 1. Thử xác thực Service Account từ st.secrets cho Private Google Sheet
-    if "gcp_service_account" in st.secrets:
+    # 1. Thử xác thực Service Account từ st.secrets cho Private Google Sheet (bọc try-except an toàn)
+    has_gcp_secret = False
+    try:
+        if "gcp_service_account" in st.secrets:
+            has_gcp_secret = True
+    except Exception:
+        has_gcp_secret = False
+
+    if has_gcp_secret:
         df = load_data_from_private_sheet(source_url)
         
     # 2. Nếu chưa thành công, thử tải trực tiếp
@@ -457,7 +464,7 @@ if 'leads_df' not in st.session_state:
         if loaded_df is not None:
             st.session_state.leads_df = loaded_df
         else:
-            st.stop()
+            st.session_state.leads_df = generate_sample_fallback_leads()
 
 df = st.session_state.leads_df
 
